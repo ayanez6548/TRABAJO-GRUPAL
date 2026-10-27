@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "NorthWind - App + Swagger + Mailtrap",
+    "Projects": [
+      {
+        "Path": "src\\4. Frameworks And Drivers\\UI\\NorthWind.Sales.WebApi\\NorthWind.Sales.WebApi.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "src\\4. Frameworks And Drivers\\UIs\\NorthWind.Sales.BlazorClient\\NorthWind.Sales.BlazorClient.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

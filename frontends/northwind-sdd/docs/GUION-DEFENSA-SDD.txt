@@ -1,0 +1,193 @@
+NORTHWIND — TERCER FRONTEND REACT + TYPESCRIPT / SDD
+Fecha de revisión: 26 de octubre de 2026
+
+QUÉ SE PRESENTA
+Este es el tercer frontend del trabajo grupal. Reutiliza el backend .NET 10.
+Blazor sigue siendo el frontend individual; no se reemplaza.
+SDD es desarrollo guiado por especificaciones, no una librería de interfaz.
+
+1. INICIAR EL BACKEND PUBLICADO EN DEBIAN
+
+Enciende la máquina virtual Debian. En PowerShell:
+
+ssh alex@192.168.220.147
+
+La IP es la última conocida. Si no conecta, consulta la IP de Debian con:
+hostname -I
+No pegues la contraseña en comandos ni en archivos.
+
+Dentro de Debian:
+
+sudo systemctl status northwind-api --no-pager
+curl -fsS http://127.0.0.1:5100/health
+
+Si el servicio está detenido:
+sudo systemctl start northwind-api
+
+Debe responder status ok, framework net10.0 y sistema Linux.
+No ejecutes dotnet run si el servicio ya ocupa 5100.
+
+2. OPCIÓN A — REACT EN WINDOWS, API EN DEBIAN
+
+En una PowerShell dedicada al túnel:
+
+ssh -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -L 5100:127.0.0.1:5100 alex@192.168.220.147
+
+Mantén esa consola abierta. Si ya tienes un túnel 5100 abierto, reutilízalo.
+
+En otra PowerShell:
+
+cd 'C:\Users\Usuario\Desktop\AplicacionesMoviles\Estudiantes\NorthWind\frontends\northwind-sdd'
+node --version
+npm ci
+npm run dev
+
+Abre http://127.0.0.1:5300
+Swagger: http://127.0.0.1:5100/swagger
+Node debe ser compatible (22.13 o posterior; probado con 24.14).
+Para detener React: Ctrl+C en su consola.
+
+3. OPCIÓN B — REACT Y API EN DEBIAN, SIN INSTALAR NODE PARA SERVIR
+
+El paquete NorthWind-React-SDD.zip contiene fuentes, especificación y dist.
+Desde PowerShell, si todavía no está copiado en Debian:
+
+cd 'C:\Users\Usuario\Desktop\AplicacionesMoviles\Estudiantes'
+scp .\NorthWind-React-SDD.zip alex@192.168.220.147:~/
+ssh alex@192.168.220.147
+
+En Debian:
+
+mkdir -p ~/NorthWind-React-SDD
+unzip -o ~/NorthWind-React-SDD.zip -d ~/NorthWind-React-SDD
+cd ~/NorthWind-React-SDD/northwind-sdd
+python3 tools/manage-sdd.py --start
+python3 tools/manage-sdd.py --status
+
+El servidor queda en 127.0.0.1:5300 y permanece al cerrar SSH.
+Después de reiniciar Debian, vuelve a ejecutar --start.
+Para detener solo React: python3 tools/manage-sdd.py --stop
+En una nueva PowerShell de Windows:
+
+ssh -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -L 5300:127.0.0.1:5300 alex@192.168.220.147
+
+Abre http://127.0.0.1:5300
+No inicies también React en Windows en el mismo puerto 5300.
+Si vas a usar el navegador de Debian, abre directamente esa URL allí.
+
+Si trabajas con la fuente completa dentro de ~/NorthWind-Full/NorthWind:
+
+cd ~/NorthWind-Full/NorthWind/frontends/northwind-sdd
+npm ci
+npm run build
+cd ../..
+bash tools/start-sdd.sh
+
+Compilar requiere Node compatible; servir el ZIP compilado solo Python 3.
+La copia React se verificó en Debian 13 tras recuperar VMware NAT.
+Ruta instalada: /home/alex/NorthWind-React-SDD/northwind-sdd
+API publicada: .NET 10.0.13; servicio activo y configuración preservada.
+Las ventas automáticas de prueba se hicieron únicamente en la base aislada
+Windows. En Debian se verificaron servidor, proxy, salud Linux y acceso 401.
+
+4. EXPLICAR SDD ANTES DE MOSTRAR EL CÓDIGO (2 MINUTOS)
+
+Abre en VS Code la carpeta frontends/northwind-sdd.
+Muestra, en este orden:
+
+docs/constitution.md
+specs/001-sales-frontend/spec.md
+specs/001-sales-frontend/clarifications.md
+specs/001-sales-frontend/plan.md
+specs/001-sales-frontend/contracts/api.md
+specs/001-sales-frontend/tasks.md
+specs/001-sales-frontend/validation.md
+
+Puedes decir:
+“Primero definimos requisitos verificables en EARS. El plan y las tareas
+se derivan de esos requisitos. Las reglas y pruebas tienen referencias RF.
+La API sigue siendo responsable de seguridad, transacciones e inventario.”
+
+Ejemplo 1: RF-10 -> T07 -> OrderPage.tsx/context.tsx -> cancelar/confirmar.
+Ejemplo 2: RF-12 -> T03 -> domain/rules.ts -> domain/rules.test.ts.
+Ejemplo 3: RF-17 -> T04/T08 -> api/client.ts -> prueba de factura ajena 404.
+
+No afirmar que se ejecutó Spec Kit CLI: el flujo SDD se siguió manualmente.
+Los otros dos frontends del grupo no forman parte de esta implementación.
+
+5. DEMOSTRACIÓN FUNCIONAL (5 A 8 MINUTOS)
+
+A. Sin sesión, mostrar que no aparecen Nueva venta, Facturas ni reloj.
+B. Crear una cuenta de demostración; o ingresar con una cuenta propia.
+   Nombres y apellidos: letras/espacios, máximo 30.
+   Correo: máximo 30 y formato válido. Ejemplo: demo.ventas@example.test
+   Contraseña: mínimo 6, mayúscula/minúscula/número/símbolo; sin máximo 30.
+   No muestres contraseñas reales durante la exposición.
+C. Intentar un campo inválido; se muestra una sola ventana al frente.
+D. Nueva venta: abrir lupa de cliente. Buscar por Nombre; luego Código.
+   Los filtros permanecen como etiquetas; no hace falta pulsar Buscar.
+   Limpiar filtros. ANTON tiene deuda de prueba: debe rechazarse.
+   Seleccionar ALFKI o ANATR sin deuda.
+E. Completar dirección, ciudad y país; código postal opcional.
+   Ejemplo: Av. Central 123 / Quito / Ecuador / 001234.
+F. Agregar un producto con existencias. Chang tiene stock cero en la semilla
+   inicial y no debe aparecer. Si los datos cambiaron, usa el catálogo actual.
+G. Intentar agregar el mismo producto: debe impedir el duplicado.
+H. Cambiar la cantidad; comprobar importes. Intentar exceder stock.
+I. Cambiar producto: se conserva cantidad y resto de líneas.
+J. Quitar producto: cancelar o Escape lo conserva; confirmar lo retira.
+K. Guardar una venta válida: esperar la confirmación y factura al frente.
+   No volver a guardar si hay una desconexión: revisar Facturas primero.
+L. En la factura: Detalle / Ver PDF / Descargar PDF / Imprimir.
+   Imprimir abre el diálogo del navegador; no hace falta imprimir en papel.
+   Abrir PDF ofrece otra pestaña si el navegador limita las descargas.
+M. Cerrar factura y abrir Facturas: historial con fecha, cliente y total.
+   Consultar la factura guardada; buscar una inexistente para mostrar el error.
+N. Salir y comprobar que desaparece la navegación privada y el reloj.
+
+CORREOS Y LOGS
+El backend conserva las reglas de las prácticas: cuatro o más productos
+distintos activan la notificación. Su entrega depende del modo SMTP de la
+API; React no contiene claves de Mailtrap.
+En esta revisión se usó PickupDirectory para no enviar correos reales.
+Los logs de dominio continúan en DomainLogs de la base configurada.
+Diagnóstico de la API publicada:
+
+sudo journalctl -u northwind-api -n 60 --no-pager
+
+6. MOSTRAR PRUEBAS SIN CREAR VENTAS ADICIONALES
+
+Desde frontends/northwind-sdd:
+
+npm run check
+npm test
+npm run build
+
+En Debian (servidor/proxy):
+python3 -m unittest discover -s tools -p test_serve_sdd.py -v
+
+Las pruebas de dominio/HTTP no envían ventas a tu API real.
+tools/verify-api.mjs SÍ escribe cuentas y ventas: úsalo solo con una base
+aislada y correo PickupDirectory, nunca durante la defensa con datos reales.
+
+7. QUÉ PUEDES CERRAR
+
+Puedes cerrar VS Code y Swagger sin detener el servicio publicado.
+Si React corre con serve-sdd.py en primer plano, Ctrl+C lo detiene.
+Con manage-sdd.py --start puedes cerrar SSH y React permanece activo.
+Cerrar la consola del túnel corta el acceso desde Windows.
+Apagar Debian detiene la API y la base allí: no lo apagues al presentar.
+Blazor 5200 es independiente; esta defensa de React usa 5300.
+
+ANTES DE PRESENTAR
+Probar conexión Debian, cuenta, existencias, una venta y PDF con anticipación.
+No confundir las cuentas/datos de la revisión aislada con tu base Debian.
+La impresión física y la descarga nativa del navegador integrado no se dan
+por verificadas automáticamente; el visor PDF sí se comprobó.
+
+SI DEBIAN APARECE SIN RED (ens33 NO-CARRIER)
+En Windows, PowerShell como administrador:
+Start-Service -Name 'VMware NAT Service'
+Get-Service -Name 'VMware NAT Service'
+En VMware: Network Adapter conectado, conectar al encender y NAT.
+En Debian: ip -br addr show ens33

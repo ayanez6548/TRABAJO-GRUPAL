@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-backend",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "src/4. Frameworks And Drivers/UI/NorthWind.Sales.WebApi", "-m:1"],
+      "problemMatcher": "$msCompile",
+      "group": {"kind": "build", "isDefault": true}
+    }
+  ]
+}

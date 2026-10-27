@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>NorthWind.HttpDelegatingHandlers</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NorthWind.Exceptions.Entities\NorthWind.Exceptions.Entities.csproj" />
+    <ProjectReference Include="..\NorthWind.Membership.Entities\NorthWind.Membership.Entities.csproj" />
+  </ItemGroup>
+</Project>

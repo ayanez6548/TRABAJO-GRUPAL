@@ -1,0 +1,32 @@
+@page "/user/register"
+@inject UserRegistrationViewModel ViewModel
+<PageTitle>Crear cuenta | NorthWind</PageTitle>
+<div class="auth-card card">
+<p class="eyebrow">NORTHWIND / CUENTA</p><h1>Crear cuenta</h1>
+<p>Crea una cuenta para realizar órdenes de venta.</p>
+<ExceptionDisplay Exception="error" />
+@if (registered) { <div class="alert success" role="status">Cuenta creada. <a href="user/login">Inicia sesión</a> para continuar.</div> }
+else {
+<EditForm Model="ViewModel" OnSubmit="Submit" novalidate><fieldset disabled="@busy">
+    <label>Nombres<input @bind:event="oninput" @bind="ViewModel.FirstName" autocomplete="given-name" required maxlength="@MembershipFieldLimits.Name" data-input-rule="letters" data-input-message="Los nombres solo admiten letras y espacios, hasta 30 caracteres." /><small class="field-hint">Solo letras y espacios. Máximo 30 caracteres.</small></label>
+    <label>Apellidos<input @bind:event="oninput" @bind="ViewModel.LastName" autocomplete="family-name" required maxlength="@MembershipFieldLimits.Name" data-input-rule="letters" data-input-message="Los apellidos solo admiten letras y espacios, hasta 30 caracteres." /></label>
+    <label>Correo electrónico<input type="email" inputmode="email" @bind:event="oninput" @bind="ViewModel.Email" autocomplete="email" required maxlength="@MembershipFieldLimits.Email" data-input-rule="email" data-email-characters="@MembershipEmailPolicy.AllowedCharacters" data-input-message="Usa letras, números y los símbolos . _ - + y la arroba, sin espacios y con una sola arroba. Máximo 30 caracteres." /><small class="field-hint">Ej.: ana.ventas&#64;dominio.com. Símbolos permitidos: . _ - + y una sola arroba. Máximo 30 caracteres.</small></label>
+    <label>Contraseña<input type="password" @bind:event="oninput" @bind="ViewModel.Password" autocomplete="new-password" required minlength="@MembershipFieldLimits.MinimumPassword" /></label>
+    <p class="muted">Usa al menos 6 caracteres e incluye una mayúscula, una minúscula, un número y un símbolo. Puedes usar una contraseña larga.</p>
+    <label>Confirmar contraseña<input type="password" @bind:event="oninput" @bind="ViewModel.ConfirmPassword" autocomplete="new-password" required minlength="@MembershipFieldLimits.MinimumPassword" /></label>
+    <button type="submit">@(busy ? "Creando cuenta…" : "Crear cuenta")</button>
+</fieldset></EditForm>
+}
+</div>
+@code {
+    private bool busy, registered;
+    private Exception? error;
+    private async Task Submit()
+    {
+        if (busy) return;
+        busy = true; error = null;
+        try { await ViewModel.Register(); registered = true; }
+        catch (Exception ex) { error = ex; }
+        finally { busy = false; }
+    }
+}

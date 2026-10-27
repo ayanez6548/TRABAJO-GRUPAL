@@ -1,0 +1,31 @@
+@page "/user/login"
+@inject UserLoginViewModel ViewModel
+@inject NavigationManager Navigation
+<PageTitle>Iniciar sesión | NorthWind</PageTitle>
+<div class="auth-card card">
+<p class="eyebrow">NORTHWIND / CUENTA</p><h1>Iniciar sesión</h1>
+<p>Ingresa tu correo electrónico y contraseña.</p>
+<ExceptionDisplay Exception="error" />
+<EditForm Model="ViewModel" OnSubmit="Submit" novalidate><fieldset disabled="@busy">
+    <label>Correo electrónico<input type="email" inputmode="email" @bind:event="oninput" @bind="ViewModel.Email" autocomplete="username" required maxlength="@MembershipFieldLimits.Email" data-input-rule="email" data-email-characters="@MembershipEmailPolicy.AllowedCharacters" data-input-message="Usa letras, números y los símbolos . _ - + y la arroba, sin espacios y con una sola arroba. Máximo 30 caracteres." /><small class="field-hint">Ej.: ana.ventas&#64;dominio.com. Símbolos permitidos: . _ - + y una sola arroba. Máximo 30 caracteres.</small></label>
+    <label>Contraseña<input type="password" @bind:event="oninput" @bind="ViewModel.Password" autocomplete="current-password" required /></label>
+    <button type="submit">@(busy ? "Iniciando sesión…" : "Iniciar sesión")</button>
+</fieldset></EditForm>
+<p>¿Todavía no tienes una cuenta? <a href="user/register">Regístrate</a>.</p>
+</div>
+@code {
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+    private bool busy;
+    private Exception? error;
+    private async Task Submit()
+    {
+        if (busy) return;
+        busy = true; error = null;
+        try {
+            await ViewModel.Login();
+            Navigation.NavigateTo(ReturnUrl == "orders/create" ? "/orders/create" : "/");
+        }
+        catch (Exception ex) { error = ex; }
+        finally { busy = false; }
+    }
+}

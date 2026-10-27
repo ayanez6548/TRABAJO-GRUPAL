@@ -1,0 +1,32 @@
+@implements IAsyncDisposable
+@using System.Globalization
+<div class="live-clock" role="timer" aria-live="off" aria-label="Fecha y hora local">
+    <span class="clock-face" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 6v6l4 2" /></svg></span>
+    <div><span class="clock-date">@now.ToString("ddd, dd MMM yyyy", SpanishCulture)</span><time datetime="@now.ToString("O")">@now.ToString("HH:mm:ss", SpanishCulture)<small>Hora local</small></time></div>
+</div>
+@code {
+    private static readonly CultureInfo SpanishCulture = CultureInfo.GetCultureInfo("es-EC");
+    private readonly CancellationTokenSource cancellation = new();
+    private DateTimeOffset now = DateTimeOffset.Now;
+    private Task? clockTask;
+
+    protected override void OnInitialized() => clockTask = UpdateClock();
+
+    private async Task UpdateClock()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellation.Token))
+                await InvokeAsync(() => { now = DateTimeOffset.Now; StateHasChanged(); });
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        cancellation.Cancel();
+        if (clockTask is not null) await clockTask;
+        cancellation.Dispose();
+    }
+}

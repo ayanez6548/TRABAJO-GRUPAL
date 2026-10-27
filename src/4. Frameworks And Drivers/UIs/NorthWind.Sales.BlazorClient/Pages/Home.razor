@@ -1,0 +1,28 @@
+@page "/"
+<PageTitle>Ventas | NorthWind</PageTitle>
+<div class="home-workspace">
+    <section class="home-intro">
+        <p class="home-caption">NorthWind</p>
+        <AuthorizeView>
+            <Authorized>
+                <h1>Ventas</h1>
+                <p class="home-lead">Hola, @(context.User.FindFirst("FullName")?.Value ?? context.User.Identity?.Name). Desde aquí puedes registrar una venta o revisar una factura guardada.</p>
+                <div class="home-actions"><a class="button" href="orders/create">Nueva venta</a><a class="button secondary" href="invoices">Consultar factura</a></div>
+            </Authorized>
+            <NotAuthorized>
+                <h1>Sistema de ventas</h1>
+                <p class="home-lead">Ingresa con tu cuenta para registrar ventas y consultar tus facturas.</p>
+                <div class="home-actions"><a class="button" href="user/login">Iniciar sesión</a><a class="button secondary" href="user/register">Crear una cuenta</a></div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </section>
+    <aside class="home-guide" aria-labelledby="sales-guide-title">
+        <h2 id="sales-guide-title">Para registrar una venta</h2>
+        <ol>
+            <li><strong>Selecciona el cliente.</strong><span>Encuéntralo por su código o nombre.</span></li>
+            <li><strong>Agrega los productos.</strong><span>Revisa las cantidades y las existencias disponibles.</span></li>
+            <li><strong>Revisa y guarda.</strong><span>Comprueba el total y descarga la factura cuando termine la venta.</span></li>
+        </ol>
+        <p>Los precios, el descuento y el IVA se calculan automáticamente.</p>
+    </aside>
+</div>

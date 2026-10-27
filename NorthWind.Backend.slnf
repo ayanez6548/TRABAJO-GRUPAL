@@ -1,0 +1,30 @@
+{
+  "solution": {
+    "path": "NorthWind.sln",
+    "projects": [
+      "src/1. Enterprise Business Rules/NorthWind.DomainLogs.Entities/NorthWind.DomainLogs.Entities.csproj",
+      "src/1. Enterprise Business Rules/NorthWind.Entities/NorthWind.Entities.csproj",
+      "src/1. Enterprise Business Rules/NorthWind.Events.Entities/NorthWind.Events.Entities.csproj",
+      "src/1. Enterprise Business Rules/NorthWind.Exceptions.Entities/NorthWind.Exceptions.Entities.csproj",
+      "src/1. Enterprise Business Rules/NorthWind.Membership.Entities/NorthWind.Membership.Entities.csproj",
+      "src/1. Enterprise Business Rules/NorthWind.Result.Entities/NorthWind.Result.Entities.csproj",
+      "src/1. Enterprise Business Rules/NorthWind.Sales.Entities/NorthWind.Sales.Entities.csproj",
+      "src/1. Enterprise Business Rules/NorthWind.Sales.Validators.Entities/NorthWind.Sales.Validators.Entities.csproj",
+      "src/1. Enterprise Business Rules/NorthWind.Transactions.Entities/NorthWind.Transactions.Entities.csproj",
+      "src/1. Enterprise Business Rules/NorthWind.Validation.Entities/NorthWind.Validation.Entities.csproj",
+      "src/2. Application Business Rules/NorthWind.Membership.Backend.Core/NorthWind.Membership.Backend.Core.csproj",
+      "src/2. Application Business Rules/NorthWind.Sales.Backend.BusinessObjects/NorthWind.Sales.Backend.BusinessObjects.csproj",
+      "src/2. Application Business Rules/NorthWind.Sales.Backend.UseCases/NorthWind.Sales.Backend.UseCases.csproj",
+      "src/3. Interface Adapters/Controllers/NorthWind.Sales.Backend.Controllers/NorthWind.Sales.Backend.Controllers.csproj",
+      "src/3. Interface Adapters/Gateways/EmailGateways/NorthWind.Sales.Backend.SmtpGateways/NorthWind.Sales.Backend.SmtpGateways.csproj",
+      "src/3. Interface Adapters/Gateways/Repositories/NorthWind.Sales.Backend.Repositories/NorthWind.Sales.Backend.Repositories.csproj",
+      "src/3. Interface Adapters/Presenters/NorthWind.Sales.Backend.Presenters/NorthWind.Sales.Backend.Presenters.csproj",
+      "src/4. Frameworks And Drivers/Frameworks/NorthWind.Membership.Backend.AspNetIdentity/NorthWind.Membership.Backend.AspNetIdentity.csproj",
+      "src/4. Frameworks And Drivers/Frameworks/NorthWind.Sales.Backend.DataContexts.EFCore/NorthWind.Sales.Backend.DataContexts.EFCore.csproj",
+      "src/4. Frameworks And Drivers/IoC/NorthWind.Sales.Backend.IoC/NorthWind.Sales.Backend.IoC.csproj",
+      "src/4. Frameworks And Drivers/Libraries/NorthWind.UserServices/NorthWind.UserServices.csproj",
+      "src/4. Frameworks And Drivers/Libraries/NorthWind.ValidationService.FluentValidation/NorthWind.ValidationService.FluentValidation.csproj",
+      "src/4. Frameworks And Drivers/UI/NorthWind.Sales.WebApi/NorthWind.Sales.WebApi.csproj"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+@inherits InputBase<short>
+@using System.Globalization
+@using System.Diagnostics.CodeAnalysis
+<input @attributes="AdditionalAttributes" class="@CssClass" type="text" inputmode="numeric" pattern="[0-9]*"
+       maxlength="5" data-input-rule="digits" data-minimum="1" data-maximum="@Maximum"
+       data-input-message="@($"Ingresa una cantidad entera entre 1 y {Maximum}.")"
+       @bind="CurrentValueAsString" @bind:event="oninput" />
+@code {
+    [Parameter] public short Maximum { get; set; } = short.MaxValue;
+
+    protected override string FormatValueAsString(short value) => value.ToString(CultureInfo.InvariantCulture);
+
+    protected override bool TryParseValueFromString(string? value, out short result, [NotNullWhen(false)] out string? validationErrorMessage)
+    {
+        if (!string.IsNullOrEmpty(value) && value.All(char.IsAsciiDigit)
+            && short.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out result)
+            && result >= 1 && result <= Maximum)
+        {
+            validationErrorMessage = null;
+            return true;
+        }
+        result = default;
+        validationErrorMessage = $"Ingresa una cantidad entera entre 1 y {Maximum}.";
+        return false;
+    }
+}

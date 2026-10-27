@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <RootNamespace>NorthWind.RazorComponents</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\1. Enterprise Business Rules\NorthWind.Exceptions.Entities\NorthWind.Exceptions.Entities.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.13" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.13" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,9 @@
+<nav aria-label="Navegación principal">
+    <NavLink href="/" Match="NavLinkMatch.All">Inicio</NavLink>
+    <AuthorizeView>
+        <Authorized>
+            <NavLink href="orders/create">Crear orden</NavLink>
+            <NavLink href="invoices">Facturas</NavLink>
+        </Authorized>
+    </AuthorizeView>
+</nav>

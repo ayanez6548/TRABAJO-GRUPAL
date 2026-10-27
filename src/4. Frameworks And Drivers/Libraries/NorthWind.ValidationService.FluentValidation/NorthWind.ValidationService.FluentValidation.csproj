@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>NorthWind.ValidationService.FluentValidation</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\1. Enterprise Business Rules\NorthWind.Validation.Entities\NorthWind.Validation.Entities.csproj" />
+    <ProjectReference Include="..\..\..\1. Enterprise Business Rules\NorthWind.Membership.Entities\NorthWind.Membership.Entities.csproj" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+  </ItemGroup>
+</Project>

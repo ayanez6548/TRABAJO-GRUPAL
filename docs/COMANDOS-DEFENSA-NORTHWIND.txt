@@ -1,0 +1,567 @@
+NORTHWIND - COMANDOS Y GUION PARA LA DEFENSA
+.NET 10 / DEBIAN 13 / BLAZOR / POSTGRESQL
+Actualizado el 22 de octubre de 2026
+
+Usa los bloques en orden. No pegues todo el archivo de una sola vez.
+Cada bloque indica si corresponde a Windows, Debian o al navegador.
+La IP usada anteriormente es 192.168.220.147; comprueba la IP si cambió.
+
+ACTUALIZACION: BACKEND PUBLICADO COMO SERVICIO
+En esta máquina, northwind-api inicia automáticamente con Debian.
+Antes de usar los pasos antiguos de ejecución desde código, comprueba:
+
+[DEBIAN - TERMINAL]
+systemctl is-active northwind-api
+systemctl is-enabled northwind-api
+sudo systemctl status northwind-api --no-pager
+curl -sS http://localhost:5100/health | python3 -m json.tool
+
+Si está active/enabled, NO ejecutes otra API con dotnet run ni start-backend.sh.
+Para reiniciarla o ver los registros:
+sudo systemctl restart northwind-api
+sudo journalctl -u northwind-api -n 50 --no-pager
+sudo journalctl -u northwind-api -f
+
+Ctrl+C cierra el seguimiento del registro y la API continúa funcionando.
+La auditoría de las ventas sigue en la tabla DomainLogs.
+Blazor sigue siendo independiente. Después de reiniciar Debian, si falta:
+python3 /home/alex/NorthWind-Full/NorthWind/tools/manage-debian-demo.py --start frontend
+
+El backend publicado escucha en localhost:5100; Swagger sigue disponible para
+la defensa. Desde Windows conserva el túnel SSH de los puertos 5100 y 5200.
+Consulta docs/PUBLICACION-DEBIAN.md para actualizar o detener el servicio.
+Los apartados siguientes conservan la alternativa de ejecución desde código.
+
+======================================================================
+1. INICIO RAPIDO RECOMENDADO PARA LA DEFENSA
+======================================================================
+
+IMPORTANTE: abrir SSH o el navegador NO inicia las aplicaciones.
+Con northwind-api habilitado, la API arranca con Debian; Blazor se inicia aparte.
+Si NO usas el servicio, hay que iniciar ambas aplicaciones otra vez.
+La base de datos puede estar encendida aunque las páginas no carguen.
+
+[WINDOWS - POWERSHELL]
+Si no tienes el túnel abierto, ejecuta este comando y deja la conexión abierta:
+
+ssh -o ExitOnForwardFailure=yes -L 5100:localhost:5100 -L 5200:localhost:5200 alex@192.168.220.147
+
+Si ya tienes ese túnel conectado, utiliza su terminal. No abras otro igual.
+Al conectarte, la consola cambia a alex@debian: lo siguiente se ejecuta allí.
+
+[DEBIAN - DENTRO DE SSH]
+Consulta primero qué está iniciado:
+
+python3 /home/alex/NorthWind/tools/manage-debian-demo.py
+python3 /home/alex/NorthWind-Full/NorthWind/tools/manage-debian-demo.py
+
+Inicia SOLO la aplicación que no esté ejecutándose:
+
+python3 /home/alex/NorthWind/tools/manage-debian-demo.py --start backend
+python3 /home/alex/NorthWind-Full/NorthWind/tools/manage-debian-demo.py --start frontend
+
+Cada comando espera y confirma HTTP 200. Puede tardar hasta tres minutos
+si tiene que compilar. Guarda la salida en un archivo de registro cuya ruta
+aparece al terminar. Si falla, muestra esa ruta para revisar el error.
+Si dice "puerto ocupado", no inicies otra copia: comprueba los comandos siguientes.
+
+curl -sS http://localhost:5100/health | python3 -m json.tool
+curl -sS -o /dev/null -w 'Blazor HTTP %{http_code}\n' http://localhost:5200/
+
+Resultado: API con status ok y Blazor HTTP 200.
+Estos procesos permanecen activos al cerrar SSH, hasta detenerlos o reiniciar Debian.
+Si la API falla por conexión con PostgreSQL, sigue el paso 4 del apartado 2.
+
+[WINDOWS - OTRA VENTANA POWERSHELL, NO DENTRO DE SSH]
+Con las respuestas anteriores correctas, abre las páginas:
+
+Start-Process "http://localhost:5100/swagger"
+Start-Process "http://localhost:5100/health"
+Start-Process "http://localhost:5200"
+
+Recarga Blazor con Ctrl+F5. La interfaz debe aparecer en español.
+Sin iniciar sesión, el menú solo muestra Inicio. El reloj de fecha y hora local,
+Crear orden y Facturas aparecen al autenticarte y se ocultan al cerrar sesión.
+Las rutas también siguen protegidas.
+Si todo abre, pasa al apartado 3 para presentar las evidencias.
+Si curl funciona en Debian pero las páginas fallan en Windows, revisa el túnel:
+un SSH abierto sin las opciones -L permite usar la terminal, pero no el navegador.
+Si necesitas ver la API en primer plano, usa el apartado 2 como alternativa.
+
+======================================================================
+2. ARRANQUE COMPLETO DESPUES DE ENCENDER DEBIAN
+======================================================================
+
+PASO 1 - Enciende la máquina Debian e inicia sesión como alex.
+
+[DEBIAN - TERMINAL]
+Comprueba la distribución, la IP y la versión del SDK:
+
+cat /etc/os-release
+hostname -I
+dotnet --version
+dotnet --list-runtimes
+
+Resultado esperado: Debian 13 y .NET 10.
+La versión del SDK es distinta de la versión del runtime; ambas deben ser 10.x.
+
+PASO 2 - Crea el acceso desde Windows.
+
+[WINDOWS - POWERSHELL, TERMINAL 1]
+Si NO tienes un túnel abierto, ejecuta:
+
+ssh -o ExitOnForwardFailure=yes -L 5100:localhost:5100 -L 5200:localhost:5200 alex@192.168.220.147
+
+Introduce la contraseña en la terminal. No cierres esta conexión durante
+la defensa: también lleva el navegador de Windows hasta las aplicaciones.
+Si hostname -I mostró otra IP, usa esa IP en lugar de 192.168.220.147.
+Si los puertos ya están ocupados por el túnel anterior, usa esa conexión;
+no abras más túneles sobre los mismos puertos.
+
+PASO 3 - Comprueba si siguen activas las ejecuciones de la actualización.
+
+[DEBIAN - dentro de la conexión SSH]
+
+python3 /home/alex/NorthWind/tools/manage-debian-demo.py
+python3 /home/alex/NorthWind-Full/NorthWind/tools/manage-debian-demo.py
+
+Si ambos indican que están en ejecución, puedes usar el inicio rápido.
+Para presentar la API en primer plano y ver sus mensajes en la terminal,
+detén SOLO las ejecuciones en segundo plano iniciadas por la actualización:
+
+python3 /home/alex/NorthWind/tools/manage-debian-demo.py --stop
+python3 /home/alex/NorthWind-Full/NorthWind/tools/manage-debian-demo.py --stop
+
+Si dice que no hay ejecuciones activas, continúa normalmente.
+El administrador anterior solo reconoce sus propios procesos de prueba.
+Si ya iniciaste dotnet run manualmente, detenlo con Ctrl+C en su terminal.
+
+PASO 4 - Inicia la base de datos si se apagó al reiniciar Debian.
+
+[DEBIAN - TERMINAL]
+
+cd /home/alex/NorthWind
+sudo docker compose up -d db
+
+sudo solicita la contraseña de alex, que pertenece al grupo sudo.
+La contraseña no se muestra al escribirla. No uses docker sin sudo en esta cuenta.
+Si prefieres usar la cuenta root y conoces SU contraseña, la alternativa es:
+
+su -c 'docker compose up -d db'
+
+Si aparece que Docker no está iniciado, arranca el servicio como administrador
+y repite el comando de la base de datos:
+
+sudo systemctl start docker
+
+Se inicia solo PostgreSQL. No ejecutes docker compose up api aquí, porque
+la API de esta demostración se ejecutará directamente con dotnet en Debian.
+
+PASO 5 - Inicia SOLO EL BACKEND para la primera parte de la defensa.
+
+[DEBIAN - TERMINAL 1, CARPETA DEL BACKEND]
+
+cd /home/alex/NorthWind
+bash tools/start-backend.sh
+
+Deja esta terminal abierta.
+Debe aparecer: Now listening on: http://localhost:5100
+El script lee la configuración privada de .env.debian.
+
+PASO 6 - Abre una segunda conexión para las comprobaciones.
+
+[WINDOWS - POWERSHELL, TERMINAL 2]
+
+ssh alex@192.168.220.147
+
+[DEBIAN - dentro de esta segunda conexión]
+
+curl -sS http://localhost:5100/health | python3 -m json.tool
+
+Debes ver: status ok, framework net10.0, runtime .NET 10.x y Debian.
+
+======================================================================
+3. EVIDENCIA DEL BACKEND EN LINUX Y DE LA ARQUITECTURA
+======================================================================
+
+[DEBIAN - TERMINAL DE COMPROBACIONES]
+
+cat /etc/os-release
+dotnet --info
+cd /home/alex/NorthWind
+dotnet sln NorthWind.Backend.slnf list
+
+Explicación sugerida:
+"El backend se ejecuta directamente en Debian 13 con .NET 10. La solución
+conserva sus capas y este filtro carga únicamente sus 23 proyectos de backend.
+La interfaz individual se desarrolla con Blazor en la misma versión de Debian."
+
+[OPCIONAL - EN EL ESCRITORIO DE DEBIAN, SI VS CODE ESTA INSTALADO]
+
+code /home/alex/NorthWind
+
+Si estás usando solo SSH sin escritorio, puedes mostrar el caso de uso así:
+
+cd /home/alex/NorthWind
+sed -n '1,120p' 'src/2. Application Business Rules/NorthWind.Sales.Backend.UseCases/CreateOrder/CreateOrderInteractor.cs'
+
+Explica BeginTransaction, CommitTransaction y RollbackTransaction, y la
+notificación de órdenes especiales. El control final de stock se encuentra en:
+
+sed -n '1,100p' 'src/4. Frameworks And Drivers/Frameworks/NorthWind.Sales.Backend.DataContexts.EFCore/DataContexts/NorthWindContext.cs'
+
+======================================================================
+4. PRIMERA PARTE: DEMOSTRAR EL BACKEND CON SWAGGER
+======================================================================
+
+[NAVEGADOR DE WINDOWS]
+http://localhost:5100/swagger
+
+4.1 SEGURIDAD: SIN TOKEN NO SE ACCEDE AL CATALOGO
+
+[DEBIAN - TERMINAL DE COMPROBACIONES]
+
+curl -i http://localhost:5100/catalog/products
+
+Resultado esperado: HTTP 401. La consulta requiere autenticación.
+
+4.2 REGISTRAR UNA CUENTA DE DEMOSTRACION
+
+En Swagger abre POST /user/Register -> Try it out.
+La siguiente cuenta es un ejemplo para crear, no una cuenta preinstalada.
+Si ya usaste ese correo, cambia el nombre antes de @.
+
+{
+  "email": "defensa20261021@example.test",
+  "password": "Defensa123!",
+  "firstName": "Ana",
+  "lastName": "Prueba"
+}
+
+Pulsa Execute. Esperado: HTTP 200.
+Repetir el registro con el mismo correo debe devolver HTTP 400.
+Los nombres de campos JSON siguen en inglés; los mensajes son en español.
+
+4.3 INICIAR SESION Y AUTORIZAR SWAGGER
+
+Abre POST /user/Login -> Try it out:
+
+{
+  "email": "defensa20261021@example.test",
+  "password": "Defensa123!"
+}
+
+Esperado: HTTP 200 con accessToken.
+Copia solo el valor de accessToken, sin comillas.
+Pulsa Authorize, pega el token, confirma y cierra el cuadro.
+No agregues el prefijo Bearer en ese cuadro: Swagger lo añade.
+Si usaste otro correo al registrarte, úsalo también al iniciar sesión.
+
+4.4 CATALOGO, BUSQUEDAS Y PAGINACION
+
+Ejecuta GET /catalog/products. Anota el stock antes de vender.
+El producto 2 tiene stock cero en los datos iniciales y no debe aparecer.
+
+Prueba GET /catalog/customers/search:
+  q=ALFKI, page=1, pageSize=1       -> búsqueda por código.
+  q=Alfreds, page=1, pageSize=1     -> búsqueda por nombre.
+
+Prueba GET /catalog/products/search:
+  q=1, page=1, pageSize=1           -> búsqueda por código.
+  q=Chai, page=1, pageSize=1        -> búsqueda por nombre.
+  q vacío, page=1, pageSize=1       -> primer bloque.
+  q vacío, page=2, pageSize=1       -> segundo bloque, producto distinto.
+
+El parámetro correcto es q, no query.
+Con los datos iniciales hay 4 productos disponibles: la ventana de Blazor,
+que muestra 5 por página, puede tener una sola página. En Swagger pageSize=1
+permite demostrar que el servidor recupera bloques distintos.
+
+4.5 GUARDAR UNA ORDEN ESPECIAL
+
+Comprueba primero que los productos 1, 3, 4 y 5 tienen existencias y que
+sus precios coinciden con este ejemplo. Si cambiaste los datos, usa los actuales.
+
+Abre POST /CreateOrder -> Try it out:
+
+{
+  "customerId": "ALFKI",
+  "shipAddress": "Calle Principal 123",
+  "shipCity": "Quito",
+  "shipCountry": "Ecuador",
+  "shipPostalCode": "170101",
+  "orderDetails": [
+    { "productId": 1, "unitPrice": 35, "quantity": 2 },
+    { "productId": 3, "unitPrice": 65, "quantity": 1 },
+    { "productId": 4, "unitPrice": 75, "quantity": 1 },
+    { "productId": 5, "unitPrice": 50, "quantity": 1 }
+  ]
+}
+
+Esperado: HTTP 200. La respuesta es el número de la orden: ANOTALO.
+No asumas que siempre será 1.
+Esta orden tiene cuatro productos distintos y activa la notificación especial.
+
+Con esos precios, descuento 10% e IVA configurado al 15%:
+  Subtotal:       260,00
+  Descuento:      26,00
+  Base imponible:234,00
+  IVA:            35,10
+  TOTAL:         269,10
+
+4.6 CONSULTAR LA FACTURA Y VERIFICAR EL INVENTARIO
+
+En GET /orders/{id}, escribe el número que acabas de guardar.
+Debe devolver cliente, dirección, detalle y totales.
+En GET /orders/{id}/invoice.pdf usa ese mismo número para obtener el PDF.
+La descarga requiere el token del propietario de la orden.
+
+Vuelve a ejecutar GET /catalog/products:
+  Producto 1: debe haber disminuido en 2 unidades.
+  Productos 3, 4 y 5: deben haber disminuido en 1 unidad cada uno.
+
+4.7 DEMOSTRAR VALIDACIONES SIN GUARDAR OTRA VENTA
+
+PRODUCTO REPETIDO -> HTTP 400:
+
+{
+  "customerId": "ALFKI",
+  "shipAddress": "Calle Principal 123",
+  "shipCity": "Quito",
+  "shipCountry": "Ecuador",
+  "shipPostalCode": "170101",
+  "orderDetails": [
+    { "productId": 1, "unitPrice": 35, "quantity": 1 },
+    { "productId": 1, "unitPrice": 35, "quantity": 1 }
+  ]
+}
+
+Usa ese mismo ejemplo, dejando UN solo detalle, para probar:
+  - quantity=32767: supera el stock de los datos de prueba -> HTTP 400.
+  - customerId=ANTON: cliente con deuda -> HTTP 400.
+  - shipCity=Quito123: ciudad inválida -> HTTP 400.
+  - unitPrice=1, quantity=1, cliente ALFKI y ciudad Quito:
+    precio alterado respecto del catálogo -> HTTP 409.
+
+Comprueba que estas solicitudes rechazadas no generaron una orden adicional
+ni disminuyeron el inventario. El caso de conflicto de precio verifica la
+cancelación dentro de la transacción. La validación de otros datos puede
+rechazar la solicitud antes de abrir la transacción.
+
+======================================================================
+5. SEGUNDA PARTE: DEMOSTRAR BLAZOR EN EL MISMO DEBIAN
+======================================================================
+
+[DEBIAN - TERMINAL 2; DEJA LA API ACTIVA EN LA TERMINAL 1]
+
+cd /home/alex/NorthWind-Full/NorthWind
+bash tools/start-frontend.sh
+
+Debe aparecer: Now listening on: http://localhost:5200
+Deja esta terminal abierta. Si necesitas más comandos, usa otra conexión SSH.
+
+[WINDOWS - OTRA TERMINAL POWERSHELL]
+
+Start-Process "http://localhost:5200"
+
+[NAVEGADOR]
+
+1) Inicia sesión con la misma cuenta que usaste en Swagger.
+2) Abre Crear orden.
+3) Pulsa Buscar cliente. Busca ALFKI y luego Alfreds; selecciona ALFKI.
+4) Vacía la dirección o escribe una ciudad con números e intenta guardar.
+   Muestra la validación en español; después corrige los datos.
+5) Pulsa Seleccionar y elige Chai. Cambia la cantidad a 2.
+6) Agrega otra línea e intenta elegir Chai: debe impedir duplicarlo.
+7) Selecciona Aniseed Syrup en esa línea. Cambia la cantidad a 2.
+8) Pulsa Cambiar y elige otro producto disponible: la cantidad debe conservarse.
+9) Pulsa Quitar para eliminar esa línea antes de guardar.
+10) Agrega los productos 3, 4 y 5 con cantidad 1. Quedan cuatro productos únicos.
+11) Muestra que precio, existencias y totales no se editan libremente.
+12) Guarda la orden. La factura se abre automáticamente en una ventana
+    superpuesta; comprueba cliente, envío, cantidades, IVA y total.
+13) Puedes cerrar la ventana con Cerrar o Escape, mostrar el mensaje de venta
+    completada y volver a abrirla con Ver factura y PDF.
+14) Pulsa Descargar PDF y abre el archivo. Usa Imprimir PDF para mostrar
+    el cuadro de impresión si te lo solicitan.
+
+La venta de Blazor es OTRA venta y vuelve a disminuir el inventario.
+El código, las clases y los contratos siguen en inglés. La interfaz,
+las validaciones, el correo y la factura están en español.
+
+======================================================================
+6. MOSTRAR TABLAS, INVENTARIO Y LOGS DE AUDITORIA
+======================================================================
+
+[DEBIAN - TERMINAL ADICIONAL]
+Abre PostgreSQL del proyecto con una cuenta administradora:
+
+cd /home/alex/NorthWind
+sudo docker compose exec db psql -U northwind -d northwind
+
+Solo si conoces la contraseña de la cuenta root, la alternativa es:
+
+su -c 'docker compose exec db psql -U northwind -d northwind'
+
+[DENTRO DE psql - NO EN LA CONSOLA BASH]
+
+\dt
+\d "OrderDetails"
+
+SELECT "Id", "Name", "UnitPrice", "UnitsInStock"
+FROM "Products" ORDER BY "Id";
+
+SELECT "Id", "CustomerId", "OrderDate", "Discount", "VatRate"
+FROM "Orders" ORDER BY "Id" DESC LIMIT 5;
+
+SELECT "OrderId", "ProductId", "UnitPrice", "Quantity"
+FROM "OrderDetails" ORDER BY "OrderId" DESC, "ProductId" LIMIT 20;
+
+SELECT "Id", "DateTime", "Information", "UserName"
+FROM "DomainLogs" ORDER BY "Id" DESC LIMIT 12;
+
+\q
+
+Explica:
+- Customers, Products, Orders y OrderDetails son las cuatro tablas del negocio.
+- OrderDetails tiene clave compuesta: OrderId + ProductId, y claves foráneas.
+- DomainLogs registra los sucesos de creación o cancelación.
+- Las tablas de Identity soportan usuarios, roles y seguridad.
+- __EFMigrationsHistory registra las migraciones.
+
+Los logs técnicos de la API se ven en su terminal si la iniciaste en primer plano.
+Con el inicio rápido, consulta el último registro de ejecución así:
+
+cd /home/alex/NorthWind
+tail -n 60 "$(ls -td artifacts/Demo-* | head -n 1)/backend.log"
+
+DomainLogs es la auditoría
+persistente; no se deben confundir los mensajes de consola con esta tabla.
+
+======================================================================
+7. MOSTRAR EL CORREO DE LA ORDEN ESPECIAL
+======================================================================
+
+El Debian preparado usa SMTP con Mailtrap, puerto 2525 y STARTTLS.
+Abre la bandeja del sandbox:
+https://mailtrap.io/sandboxes/4960828
+
+Guarda una orden con CUATRO O MÁS PRODUCTOS DISTINTOS para generar el aviso.
+Una orden con uno, dos o tres productos no dispara la notificación especial.
+Cambiar la cantidad de una misma línea no cuenta como agregar otro producto.
+El mensaje esperado tiene el asunto "Orden especial creada" y el número de orden.
+Si falla el envío, la transacción se cancela y la pantalla informa el error.
+Las credenciales están en .env.debian; no las muestres durante la defensa.
+
+Si eliges usar el modo alternativo PickupDirectory, el correo se guarda como
+archivo .eml y no aparece en Mailtrap. Solo en ese modo usa el bloque siguiente:
+
+[DEBIAN - TERMINAL]
+Este bloque muestra el último mensaje local de PickupDirectory (puede ser antiguo):
+
+python3 - <<'PY'
+from pathlib import Path
+from email import policy
+from email.parser import BytesParser
+import json
+root = Path('/home/alex/NorthWind')
+api = root / 'src/4. Frameworks And Drivers/UI/NorthWind.Sales.WebApi'
+env = dict(line.split('=', 1) for line in (root / '.env.debian').read_text().splitlines() if '=' in line and not line.startswith('#'))
+options = json.loads((api / 'appsettings.json').read_text()).get('SmtpOptions', {})
+directory = Path(env.get('SmtpOptions__PickupDirectory', options.get('PickupDirectory', 'App_Data/mail')))
+if not directory.is_absolute():
+    directory = api / directory
+files = list(directory.glob('*.eml'))
+if not files:
+    print('No hay mensajes locales en la ruta configurada. Revisa el modo de correo y guarda una orden con cuatro productos distintos.')
+else:
+    latest = max(files, key=lambda item: item.stat().st_mtime)
+    message = BytesParser(policy=policy.default).parsebytes(latest.read_bytes())
+    print('Archivo:', latest)
+    print('Asunto:', message['Subject'])
+    print(message.get_content())
+PY
+
+Debes poder mostrar: "Orden especial creada" y el número de la orden.
+Con el modo Smtp actual, revisa Mailtrap; no esperes un archivo local nuevo.
+
+======================================================================
+8. PRUEBAS AUTOMATIZADAS OPCIONALES
+======================================================================
+
+Estas pruebas complementan la explicación; prepara las dependencias antes
+de la defensa si vas a usarlas.
+
+[DEBIAN - TERMINAL ADICIONAL, CON API ACTIVA]
+
+cd /home/alex/NorthWind
+python3 tools/smoke-test.py --require-linux --output artifacts/Defensa
+
+Comprueba 39 condiciones en Linux. Crea cuentas y DOS ventas de prueba,
+disminuye stock y activa la notificación. Sus archivos quedan en:
+  /home/alex/NorthWind/artifacts/Defensa/http-results.json
+  /home/alex/NorthWind/artifacts/Defensa/invoice.pdf
+
+Esta prueba necesita al menos cuatro productos distintos disponibles.
+Ejecuta una vez y revisa las existencias antes de repetir toda la demostración.
+
+Para pruebas unitarias sin proporcionar una conexión de integración:
+
+cd /home/alex/NorthWind-Full/NorthWind
+dotnet test tests/NorthWind.Tests/NorthWind.Tests.csproj --filter 'TestCategory!=SqlServer'
+
+La suite actual tiene 105 casos en este filtro. Los dos casos de integración
+relacional se ejecutan aparte con una conexión de pruebas; comprueban también
+concurrencia y rollback. No es necesario configurarlos durante la exposición.
+
+======================================================================
+9. CIERRE Y SOLUCIONES RAPIDAS
+======================================================================
+
+- Si iniciaste API y Blazor en primer plano: Ctrl+C en cada terminal las detiene.
+- Si usaste el inicio rápido, usa manage-debian-demo.py --stop
+  en cada proyecto, como se indicó en el apartado 2.
+- Cerrar el navegador no detiene la API ni Blazor.
+- Mantén abierto el túnel SSH mientras uses el navegador de Windows.
+- Si aparece 401 después de un rato, inicia sesión de nuevo y renueva el token
+  de Swagger. La duración configurada del token es de 30 minutos.
+- Un error de puerto ocupado suele indicar otra ejecución de la misma app.
+  Detén la ejecución anterior correspondiente y vuelve a iniciar.
+- Si un producto desaparece del catálogo, comprueba si su stock llegó a cero.
+- Si ves "Viento del norte", desactiva la traducción de Chrome y muestra el
+  original. El nombre de la aplicación es NorthWind y su interfaz ya es española.
+
+FRASE PARA COMENZAR LA DEFENSA:
+"Presento un backend en .NET 10 ejecutado sobre Debian 13, con arquitectura
+por capas, autenticación JWT y transacciones. Demostraré una venta con control
+de inventario, validaciones y factura PDF. La interfaz individual usa Blazor
+en el mismo Debian, con código en inglés e interacción en español."
+
+CAMBIOS PARA DEMOSTRAR EN LOS FILTROS Y VALIDACIONES:
+- En "Filtrar por", elegir el campo: solo se muestra la entrada seleccionada.
+- Los filtros anteriores siguen activos como etiquetas. Pulsar su × quita solo ese filtro.
+- Clientes: combinar código, nombre y saldo mínimo/máximo.
+- Productos: combinar código, nombre, precio y existencias mínimas/máximas.
+- Limpiar restablece todos los filtros; Anterior/Siguiente conserva los aplicados.
+- Quitar muestra confirmación: Cancelar y Escape conservan el producto; Sí, quitar lo retira.
+- Correo: máximo 30 caracteres en login y registro; una arroba, sin espacios; símbolos . _ - +.
+- Nombres y apellidos: máximo 30 caracteres.
+- Contraseña y confirmación: sin máximo de longitud impuesto por la aplicación; registro conserva el mínimo de 6 caracteres, mayúscula, minúscula, número y símbolo.
+
+BUSQUEDA AUTOMATICA Y AVISOS:
+- Escribe en código, nombre, importes o existencias: la lista se actualiza al dejar de escribir durante 400 ms. No es obligatorio pulsar Buscar.
+- Si cambias el filtro mientras llega una consulta anterior, se conserva el resultado de la consulta más reciente.
+- Limpiar cancela la búsqueda pendiente y restablece los resultados.
+- Los errores de formularios, rangos y caracteres no permitidos muestran una ventana al frente con Entendido.
+- Las advertencias se muestran solo en una ventana al frente con Entendido o Escape.
+- Los errores se agrupan sin repetir mensajes; no hay resúmenes rojos arriba del formulario ni globos del navegador.
+
+HISTORIAL DE FACTURAS:
+- Iniciar sesión y abrir Facturas: se listan las ventas guardadas por esa cuenta,
+  de la más reciente a la más antigua, con fecha UTC, cliente, productos y total.
+- Elegir 5, 10 o 20 facturas por página; usar Anterior y Siguiente.
+- "Ver factura" abre la vista previa al frente, con Descargar PDF e Imprimir PDF.
+- "Actualizar" consulta de nuevo el historial. La búsqueda por número sigue disponible.
+- Una cuenta nueva muestra un historial vacío hasta guardar su primera venta.
+- Las ventas se recuperan de la base de datos, no del historial del navegador.
+- El backend obtiene la identidad del token: no permite consultar las facturas de otra cuenta.

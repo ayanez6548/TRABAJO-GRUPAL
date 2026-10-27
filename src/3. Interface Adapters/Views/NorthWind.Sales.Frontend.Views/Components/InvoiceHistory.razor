@@ -1,0 +1,50 @@
+@implements IDisposable
+@inject ICreateOrderGateway Gateway
+<section class="card invoice-history" aria-labelledby="invoice-history-title">
+    <div class="section-title"><div><h2 id="invoice-history-title">Historial de facturas</h2><p class="muted">Tus ventas guardadas, de la más reciente a la más antigua.</p></div><button type="button" class="secondary" disabled="@loading" @onclick="Refresh">Actualizar</button></div>
+    <ExceptionDisplay Exception="error" />
+    @if (loading) { <p role="status">Cargando historial…</p> }
+    else if (error is null)
+    {
+        @if (history is null || history.TotalCount == 0)
+        {
+            <div class="history-empty"><strong>Aún no tienes facturas guardadas.</strong><p>Cuando registres una venta con esta cuenta, aparecerá aquí.</p><a class="button" href="orders/create">Crear una orden</a></div>
+        }
+        else
+        {
+            <div class="table-scroll"><table><thead><tr><th>Factura</th><th>Fecha (UTC)</th><th>Cliente</th><th>Productos</th><th class="history-amount">Total (USD)</th><th>Abrir</th></tr></thead><tbody>
+            @foreach (var item in history.Items)
+            {
+                <tr @key="item.Id"><td><strong>#@item.Id</strong></td><td>@item.OrderDate.UtcDateTime.ToString("dd/MM/yyyy HH:mm")</td><td class="history-customer"><strong>@item.CustomerName</strong><small>@item.CustomerId</small></td><td>@item.ProductsCount</td><td class="history-amount">@item.Total.ToString("F2")</td><td><button type="button" aria-label="@($"Ver factura {item.Id}")" @onclick="() => OpenInvoice.InvokeAsync(item.Id)">Ver factura</button></td></tr>
+            }
+            </tbody></table></div>
+            <div class="history-footer"><label>Facturas por página<select @bind="pageSize" @bind:after="Refresh" disabled="@loading"><option value="5">5 facturas</option><option value="10">10 facturas</option><option value="20">20 facturas</option></select></label>
+                <div class="pagination"><button type="button" class="secondary" disabled="@(page <= 1)" @onclick="Previous">Anterior</button><span>Página @(page) de @Math.Max(1, history.TotalPages) · @history.TotalCount @(history.TotalCount == 1 ? "factura" : "facturas")</span><button type="button" class="secondary" disabled="@(page >= history.TotalPages)" @onclick="Next">Siguiente</button></div>
+            </div>
+        }
+    }
+</section>
+@code {
+    [Parameter] public EventCallback<int> OpenInvoice { get; set; }
+    private PagedResult<InvoiceSummaryDto>? history;
+    private Exception? error;
+    private int page = 1, pageSize = 5, requestVersion;
+    private bool loading, disposed;
+    protected override Task OnInitializedAsync() => Load();
+    private Task Refresh() { page = 1; return Load(); }
+    private Task Previous() { page--; return Load(); }
+    private Task Next() { page++; return Load(); }
+    private async Task Load()
+    {
+        var version = ++requestVersion;
+        loading = true; error = null;
+        try
+        {
+            var result = await Gateway.GetInvoiceHistory(page, pageSize);
+            if (!disposed && version == requestVersion) history = result;
+        }
+        catch (Exception ex) { if (!disposed && version == requestVersion) error = ex; }
+        finally { if (!disposed && version == requestVersion) loading = false; }
+    }
+    public void Dispose() { disposed = true; requestVersion++; }
+}

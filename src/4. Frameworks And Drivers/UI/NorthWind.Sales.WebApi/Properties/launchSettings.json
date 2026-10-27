@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "NorthWind.API": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "applicationUrl": "http://localhost:5100",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DevelopmentTools__MailtrapUrl": "https://mailtrap.io/sandboxes/4960828/settings"
+      }
+    }
+  }
+}

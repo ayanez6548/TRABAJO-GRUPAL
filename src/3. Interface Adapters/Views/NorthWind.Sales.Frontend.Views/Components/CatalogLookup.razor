@@ -1,0 +1,195 @@
+@implements IDisposable
+@inject ICreateOrderGateway Gateway
+<div class="modal-backdrop" @onkeydown="HandleKey">
+<section class="lookup-dialog card" role="dialog" aria-modal="true" aria-labelledby="lookup-title">
+    <div class="section-title lookup-heading"><div><p class="eyebrow">CATÁLOGO / @(Products ? "PRODUCTOS" : "CLIENTES")</p><h2 id="lookup-title">Seleccionar @(Products ? "producto" : "cliente")</h2></div><button class="secondary" type="button" @onclick="Close">Cerrar</button></div>
+    <form class="lookup-filters" @onsubmit="Search" @onsubmit:preventDefault>
+        <div class="filter-heading"><strong>Filtros de búsqueda</strong><span>@(Products ? "Solo productos con existencias" : "Busca al cliente para esta venta")</span></div>
+        <div class="catalog-filter-row">
+            <label class="filter-selector">Filtrar por<select @bind="filterField"><option value="name">Nombre</option><option value="code">Código</option><option value="amount">@(Products ? "Precio" : "Saldo")</option>@if (Products) { <option value="stock">Existencias</option> }</select></label>
+            <div class="catalog-selected-filter">
+                @if (filterField == "code")
+                {
+                    <label>Código<input autofocus maxlength="@(Products ? 10 : 5)" @bind="code" @bind:event="oninput" @bind:after="ScheduleSearch" inputmode="@(Products ? "numeric" : "text")" data-input-rule="@(Products ? "digits" : "code")" data-minimum="@(Products ? "1" : null)" data-maximum="@(Products ? "2147483647" : null)" data-input-message="@(Products ? "El código admite solo números enteros positivos." : "El código admite hasta 5 letras o números.")" placeholder="@(Products ? "Ej.: 1" : "Ej.: ALFKI")" /></label>
+                }
+                else if (filterField == "amount")
+                {
+                    <div class="filter-range"><label>@(Products ? "Precio mínimo (USD)" : "Saldo mínimo (USD)")<input maxlength="9" inputmode="decimal" @bind="minimumAmount" @bind:event="oninput" @bind:after="ScheduleSearch" data-input-rule="money" data-input-message="Usa un valor entre 0 y 999999,99, con hasta dos decimales." placeholder="Desde" /></label>
+                    <label>@(Products ? "Precio máximo (USD)" : "Saldo máximo (USD)")<input maxlength="9" inputmode="decimal" @bind="maximumAmount" @bind:event="oninput" @bind:after="ScheduleSearch" data-input-rule="money" data-input-message="Usa un valor entre 0 y 999999,99, con hasta dos decimales." placeholder="Hasta" /></label></div>
+                }
+                else if (Products && filterField == "stock")
+                {
+                    <div class="filter-range"><label>Existencias mínimas<input maxlength="5" inputmode="numeric" @bind="minimumStock" @bind:event="oninput" @bind:after="ScheduleSearch" data-input-rule="digits" data-minimum="1" data-maximum="32767" data-input-message="Las existencias admiten números enteros entre 1 y 32767." placeholder="Desde" /></label>
+                    <label>Existencias máximas<input maxlength="5" inputmode="numeric" @bind="maximumStock" @bind:event="oninput" @bind:after="ScheduleSearch" data-input-rule="digits" data-minimum="1" data-maximum="32767" data-input-message="Las existencias admiten números enteros entre 1 y 32767." placeholder="Hasta" /></label></div>
+                }
+                else
+                {
+                    <label>Nombre<input autofocus maxlength="@SalesFieldLimits.Search" @bind="name" data-input-rule="text" data-input-message="La búsqueda por nombre admite hasta 100 caracteres." @bind:event="oninput" @bind:after="ScheduleSearch" placeholder="@(Products ? "Ej.: Chai" : "Ej.: Alfreds")" /></label>
+                }
+            </div>
+        </div>
+        <p class="filter-help compact-help">Los resultados se actualizan al escribir. Puedes combinar varios filtros.</p>
+        @if (!string.IsNullOrEmpty(code) || !string.IsNullOrEmpty(name) || !string.IsNullOrEmpty(minimumAmount) || !string.IsNullOrEmpty(maximumAmount) || !string.IsNullOrEmpty(minimumStock) || !string.IsNullOrEmpty(maximumStock))
+        {
+            <div class="filter-chips" aria-label="Filtros activos">
+                @if (!string.IsNullOrEmpty(code)) { <button type="button" class="secondary" aria-label="Quitar filtro de código" @onclick='() => ClearFilter("code")'><span class="filter-chip-value">Código: @(code)</span><span aria-hidden="true">×</span></button> }
+                @if (!string.IsNullOrEmpty(name)) { <button type="button" class="secondary" aria-label="Quitar filtro de nombre" @onclick='() => ClearFilter("name")'><span class="filter-chip-value">Nombre: @name</span><span aria-hidden="true">×</span></button> }
+                @if (!string.IsNullOrEmpty(minimumAmount) || !string.IsNullOrEmpty(maximumAmount)) { <button type="button" class="secondary" aria-label="Quitar filtro de importe" @onclick='() => ClearFilter("amount")'><span class="filter-chip-value">@(Products ? "Precio" : "Saldo"): @RangeLabel(minimumAmount, maximumAmount)</span><span aria-hidden="true">×</span></button> }
+                @if (!string.IsNullOrEmpty(minimumStock) || !string.IsNullOrEmpty(maximumStock)) { <button type="button" class="secondary" aria-label="Quitar filtro de existencias" @onclick='() => ClearFilter("stock")'><span class="filter-chip-value">Existencias: @RangeLabel(minimumStock, maximumStock)</span><span aria-hidden="true">×</span></button> }
+            </div>
+        }
+        <div class="filter-controls filter-footer">
+            <label class="page-size">Resultados por página<select @bind="pageSize" @bind:after="Search" disabled="@loading"><option value="5">5 resultados</option><option value="10">10 resultados</option><option value="20">20 resultados</option></select></label>
+            <div class="action-group"><button type="submit">Buscar</button><button class="secondary" type="button" @onclick="Clear">Limpiar</button></div>
+        </div>
+    </form>
+    <ExceptionDisplay Exception="error" />
+    @if (loading) { <p role="status">Buscando…</p> }
+    else if (error is null)
+    {
+        <div class="table-scroll"><table><thead><tr><th>Código</th><th>Nombre</th><th>@(Products ? "Existencias / precio unitario" : "Saldo")</th><th>Seleccionar</th></tr></thead><tbody>
+        @if (Products)
+        {
+            @foreach (var product in products) { <tr><td>@product.Id</td><td>@product.Name</td><td>@product.UnitsInStock / USD @product.UnitPrice.ToString("F2")</td><td><button type="button" aria-label="@($"Seleccionar producto {product.Id}")" @onclick="() => ProductSelected.InvokeAsync(product)">Seleccionar</button></td></tr> }
+        }
+        else
+        {
+            @foreach (var customer in customers) { <tr><td>@customer.Id</td><td>@customer.Name</td><td>USD @customer.CurrentBalance.ToString("F2")</td><td><button type="button" aria-label="@($"Seleccionar cliente {customer.Id}")" @onclick="() => CustomerSelected.InvokeAsync(customer)">Seleccionar</button></td></tr> }
+        }
+        </tbody></table></div>
+        @if (total == 0) { <p>No se encontraron resultados.</p> }
+        <div class="pagination"><button class="secondary" type="button" disabled="@(page <= 1)" @onclick="Previous">Anterior</button><span>Página @(page) de @Math.Max(1, pages) · @total resultados</span><button class="secondary" type="button" disabled="@(page >= pages)" @onclick="Next">Siguiente</button></div>
+    }
+</section>
+</div>
+@code {
+    [Parameter] public bool Products { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+    [Parameter] public EventCallback<CustomerDto> CustomerSelected { get; set; }
+    [Parameter] public EventCallback<ProductDto> ProductSelected { get; set; }
+    private string filterField = "name";
+    private string code = "", name = "", minimumAmount = "", maximumAmount = "", minimumStock = "", maximumStock = "";
+    private CustomerSearchFilters customerFilters = new();
+    private ProductSearchFilters productFilters = new();
+    private int page = 1, pages, total;
+    private int pageSize = 5;
+    private bool loading, disposed;
+    private int requestVersion;
+    private CancellationTokenSource? pendingSearch;
+    private Exception? error;
+    private IReadOnlyList<ProductDto> products = [];
+    private IReadOnlyList<CustomerDto> customers = [];
+    protected override Task OnInitializedAsync() => Load(++requestVersion);
+    private async Task ScheduleSearch()
+    {
+        pendingSearch?.Cancel();
+        using var cancellation = new CancellationTokenSource();
+        pendingSearch = cancellation;
+        var version = ++requestVersion;
+        loading = true; error = null;
+        try
+        {
+            await Task.Delay(400, cancellation.Token);
+            if (!disposed && !cancellation.IsCancellationRequested) await ApplySearch(version);
+        }
+        catch (OperationCanceledException) { }
+        finally { if (ReferenceEquals(pendingSearch, cancellation)) pendingSearch = null; }
+    }
+    private Task Search()
+    {
+        pendingSearch?.Cancel();
+        return ApplySearch(++requestVersion);
+    }
+    private async Task ApplySearch(int version)
+    {
+        if (disposed || version != requestVersion) return;
+        loading = true; error = null;
+        try
+        {
+            var minimum = Amount(minimumAmount);
+            var maximum = Amount(maximumAmount);
+            if (minimum > maximum) throw FilterError("El importe mínimo no puede superar el máximo.");
+            if (Products)
+            {
+                var lowStock = Number(minimumStock, 32767);
+                var highStock = Number(maximumStock, 32767);
+                if (lowStock > highStock) throw FilterError("Las existencias mínimas no pueden superar las máximas.");
+                productFilters = new(Number(code, int.MaxValue), name, minimum, maximum, lowStock, highStock);
+            }
+            else customerFilters = new(code, name, minimum, maximum);
+            page = 1;
+            await Load(version);
+        }
+        catch (Exception ex)
+        {
+            if (!disposed && version == requestVersion) { error = ex; loading = false; }
+        }
+    }
+    private async Task Clear()
+    {
+        pendingSearch?.Cancel();
+        code = name = minimumAmount = maximumAmount = minimumStock = maximumStock = "";
+        customerFilters = new(); productFilters = new(); page = 1;
+        await Load(++requestVersion);
+    }
+    private Task ClearFilter(string field)
+    {
+        switch (field)
+        {
+            case "code": code = ""; break;
+            case "name": name = ""; break;
+            case "amount": minimumAmount = maximumAmount = ""; break;
+            case "stock": minimumStock = maximumStock = ""; break;
+        }
+        return Search();
+    }
+    private static string RangeLabel(string minimum, string maximum) => string.IsNullOrEmpty(minimum)
+        ? $"hasta {maximum}" : string.IsNullOrEmpty(maximum) ? $"desde {minimum}" : $"{minimum} – {maximum}";
+    private static NorthWind.Exceptions.Entities.ValidationException FilterError(string message) => new([new("Search", message)]);
+    private static decimal? Amount(string value)
+    {
+        if (string.IsNullOrEmpty(value)) return null;
+        if (!decimal.TryParse(value.Replace(',', '.'), System.Globalization.NumberStyles.AllowDecimalPoint,
+            System.Globalization.CultureInfo.InvariantCulture, out var amount) || amount < 0 || amount > 999999.99m || decimal.Round(amount, 2) != amount)
+            throw FilterError("Usa importes entre 0 y 999999,99, con hasta dos decimales.");
+        return amount;
+    }
+    private static int? Number(string value, int maximum)
+    {
+        if (string.IsNullOrEmpty(value)) return null;
+        if (!value.All(char.IsAsciiDigit) || !int.TryParse(value, out var number) || number < 1 || number > maximum)
+            throw FilterError($"Usa un número entero entre 1 y {maximum}.");
+        return number;
+    }
+    private Task Previous() { pendingSearch?.Cancel(); page--; return Load(++requestVersion); }
+    private Task Next() { pendingSearch?.Cancel(); page++; return Load(++requestVersion); }
+    private async Task HandleKey(KeyboardEventArgs args) { if (args.Key == "Escape") await Close.InvokeAsync(); }
+    private async Task Load(int version)
+    {
+        if (disposed || version != requestVersion) return;
+        loading = true; error = null;
+        try
+        {
+            if (Products)
+            {
+                var result = await Gateway.SearchProducts("", page, pageSize, productFilters);
+                if (disposed || version != requestVersion) return;
+                products = result.Items; pages = result.TotalPages; total = result.TotalCount;
+            }
+            else
+            {
+                var result = await Gateway.SearchCustomers("", page, pageSize, customerFilters);
+                if (disposed || version != requestVersion) return;
+                customers = result.Items; pages = result.TotalPages; total = result.TotalCount;
+            }
+        }
+        catch (Exception ex) { if (!disposed && version == requestVersion) error = ex; }
+        finally { if (!disposed && version == requestVersion) loading = false; }
+    }
+    public void Dispose()
+    {
+        disposed = true;
+        requestVersion++;
+        pendingSearch?.Cancel();
+    }
+}

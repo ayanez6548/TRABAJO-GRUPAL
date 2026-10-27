@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>NorthWind.Sales.Backend.SmtpGateways</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\1. Enterprise Business Rules\NorthWind.Entities\NorthWind.Entities.csproj" />
+    <ProjectReference Include="..\..\..\..\1. Enterprise Business Rules\NorthWind.Exceptions.Entities\NorthWind.Exceptions.Entities.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.13" />
+  </ItemGroup>
+</Project>

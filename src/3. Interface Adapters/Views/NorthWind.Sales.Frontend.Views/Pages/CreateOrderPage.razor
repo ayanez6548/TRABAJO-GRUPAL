@@ -1,0 +1,83 @@
+@page "/orders/create"
+@attribute [Authorize]
+@inject CreateOrderViewModel ViewModel
+@inject ICreateOrderGateway Gateway
+<PageTitle>Crear orden de venta | NorthWind</PageTitle>
+<p class="eyebrow">VENTAS / NUEVA ORDEN</p><h1>Crear una orden de venta</h1>
+<p>Selecciona un cliente y los productos disponibles. Los precios y totales se calculan automáticamente.</p>
+<ExceptionDisplay Exception="error" />
+@if (orderId is not null)
+{
+    <div class="alert success" role="status">Venta completada. Se guardó la orden @orderId y se actualizó el inventario.</div>
+    <div class="action-group"><button @onclick="() => invoicePreview = true">Ver factura y PDF</button><button class="secondary" @onclick="NewOrder">Crear otra orden</button></div>
+}
+else if (loading) { <p role="status">Cargando configuración de ventas…</p> }
+else
+{
+<EditForm Model="ViewModel" OnSubmit="Submit" novalidate><fieldset disabled="@busy">
+    <section class="card"><h2>Cliente y envío</h2><div class="grid shipping-grid">
+        <div class="form-field"><label for="order-customer">Cliente</label><div class="input-action"><input id="order-customer" readonly value="@(string.IsNullOrEmpty(ViewModel.CustomerId) ? "" : $"{ViewModel.CustomerId} · {ViewModel.CustomerName}")" placeholder="Selecciona un cliente" /><button type="button" class="icon-button" aria-label="Buscar cliente" title="Buscar cliente por código o nombre" @onclick="() => customerLookup = true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4.5 4.5" /></svg></button></div></div>
+        <label class="shipping-address">Dirección de envío<input @bind:event="oninput" @bind="ViewModel.ShipAddress" maxlength="@SalesFieldLimits.Address" required data-input-rule="address" data-input-message="La dirección admite hasta 60 caracteres: letras, números, espacios y # . , / -." /><small class="field-hint">Hasta 60 caracteres. Incluye el número de la dirección.</small></label>
+        <label>Ciudad<input @bind:event="oninput" @bind="ViewModel.ShipCity" minlength="3" maxlength="@SalesFieldLimits.City" required data-input-rule="letters" data-input-message="La ciudad solo admite letras y espacios, hasta 15 caracteres." /><small class="field-hint">De 3 a 15 caracteres. Solo letras y espacios.</small></label>
+        <label>País<input @bind:event="oninput" @bind="ViewModel.ShipCountry" minlength="3" maxlength="@SalesFieldLimits.Country" required data-input-rule="letters" data-input-message="El país solo admite letras y espacios, hasta 15 caracteres." /><small class="field-hint">De 3 a 15 caracteres. Solo letras y espacios.</small></label>
+        <label>Código postal (opcional)<input @bind:event="oninput" @bind="ViewModel.ShipPostalCode" maxlength="@SalesFieldLimits.PostalCode" inputmode="numeric" pattern="[0-9]*" data-input-rule="digits" data-input-message="El código postal admite hasta 10 dígitos, sin letras ni espacios." /><small class="field-hint">Hasta 10 dígitos.</small></label>
+    </div></section>
+    <section class="card"><div class="section-title"><h2>Detalle de la orden</h2><button type="button" class="secondary" @onclick="AddLine">Agregar producto</button></div>
+    <div class="table-scroll"><table><thead><tr><th>Producto</th><th>Precio unitario (USD)</th><th>Disponible</th><th>Cantidad</th><th>Importe (USD)</th><th>Acciones</th></tr></thead><tbody>
+    @foreach (var line in ViewModel.Details)
+    {
+        <tr @key="line"><td>@(line.ProductId == 0 ? "Selecciona un producto" : $"{line.ProductId} · {line.ProductName}")</td>
+        <td><input aria-label="Precio unitario" readonly value="@line.UnitPrice.ToString("F2")" /></td><td>@line.UnitsInStock</td>
+        <td><QuantityInput aria-label="Cantidad" @bind-Value="line.Quantity" Maximum="line.UnitsInStock" disabled="@(line.ProductId == 0)" /><small class="field-hint">@(line.ProductId == 0 ? "Selecciona un producto" : $"Máximo {line.UnitsInStock}")</small></td><td>@((line.UnitPrice * line.Quantity).ToString("F2"))</td>
+        <td><div class="row-actions"><button type="button" class="secondary" @onclick="() => activeLine = line">@(line.ProductId == 0 ? "Seleccionar" : "Cambiar")</button><button type="button" class="danger-ghost" @onclick="() => pendingRemoval = line">Quitar</button></div></td></tr>
+    }
+    </tbody></table></div>
+    <dl class="invoice-totals"><dt>Subtotal</dt><dd>USD @ViewModel.Subtotal.ToString("F2")</dd><dt>Descuento (@ViewModel.DiscountPercent%)</dt><dd>USD @ViewModel.DiscountAmount.ToString("F2")</dd><dt>Base imponible</dt><dd>USD @ViewModel.TaxableAmount.ToString("F2")</dd><dt>IVA (@((ViewModel.VatRate * 100).ToString("0.##"))%)</dt><dd>USD @ViewModel.VatAmount.ToString("F2")</dd><dt><strong>Total</strong></dt><dd><strong>USD @ViewModel.Total.ToString("F2")</strong></dd></dl>
+    <p class="muted">Cada producto puede aparecer una sola vez. Solo se muestran productos con existencias. Al guardar la orden se actualiza el inventario.</p></section>
+    <button type="submit" disabled="@(ViewModel.Details.Count == 0)">@(busy ? "Guardando venta…" : "Guardar orden de venta")</button>
+</fieldset></EditForm>
+}
+@if (customerLookup) { <CatalogLookup CustomerSelected="SelectCustomer" Close="() => customerLookup = false" /> }
+@if (activeLine is not null) { <CatalogLookup Products="true" ProductSelected="SelectProduct" Close="() => activeLine = null" /> }
+@if (invoicePreview && orderId is int savedOrderId) { <InvoicePreview OrderId="savedOrderId" Close="() => invoicePreview = false" /> }
+@if (pendingRemoval is not null) { <ConfirmProductRemoval ProductName="@(pendingRemoval.ProductId == 0 ? "Línea sin producto" : pendingRemoval.ProductName)" Cancelled="() => pendingRemoval = null" Confirmed="RemoveLine" /> }
+@code {
+    private bool loading = true, busy, customerLookup, invoicePreview;
+    private int? orderId;
+    private Exception? error;
+    private OrderDetailViewModel? activeLine;
+    private OrderDetailViewModel? pendingRemoval;
+    private void RemoveLine() { if (!busy && pendingRemoval is not null) ViewModel.Details.Remove(pendingRemoval); pendingRemoval = null; }
+    protected override async Task OnInitializedAsync()
+    {
+        try { var settings = await Gateway.GetSalesSettings(); ViewModel.VatRate = settings.VatRate; ViewModel.DiscountPercent = settings.DiscountPercent; }
+        catch (Exception ex) { error = ex; }
+        finally { loading = false; }
+    }
+    private void AddLine() => ViewModel.Details.Add(new());
+    private void NewOrder() { invoicePreview = false; orderId = null; ViewModel.Details.Clear(); AddLine(); }
+    private void SelectCustomer(CustomerDto customer) { ViewModel.CustomerId = customer.Id; ViewModel.CustomerName = customer.Name; customerLookup = false; }
+    private void SelectProduct(ProductDto product)
+    {
+        try { ViewModel.SelectProduct(activeLine!, product); activeLine = null; error = null; }
+        catch (Exception ex) { error = ex; activeLine = null; }
+    }
+    private async Task Submit(EditContext context)
+    {
+        if (busy || pendingRemoval is not null) return;
+        if (!context.Validate())
+        {
+            var errors = ViewModel.Details.SelectMany((line, index) =>
+                context.GetValidationMessages(new FieldIdentifier(line, nameof(line.Quantity)))
+                    .Select(message => new NorthWind.Validation.Entities.ValidationError($"OrderDetails[{index}].Quantity", message)))
+                .ToArray();
+            error = new NorthWind.Exceptions.Entities.ValidationException(errors.Length > 0 ? errors
+                : [new("Quantity", "Revisa las cantidades y sus límites de existencias.")]);
+            return;
+        }
+        busy = true; error = null;
+        try { orderId = await ViewModel.CreateOrder(); invoicePreview = true; }
+        catch (Exception ex) { error = ex; }
+        finally { busy = false; }
+    }
+}

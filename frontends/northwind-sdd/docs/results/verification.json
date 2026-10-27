@@ -1,0 +1,174 @@
+{
+  "date": "2026-10-26",
+  "environment": "Windows, Node 24.14, .NET 10.0.12, isolated LocalDB NorthWindSddReview20261026, SMTP PickupDirectory",
+  "unitTests": {
+    "total": 35,
+    "passed": 35,
+    "cases": [
+      {
+        "name": "RF-13/17/21 contrato HTTP envía Bearer al historial sin aceptar propietario del navegador",
+        "status": "passed"
+      },
+      {
+        "name": "RF-13/17/21 contrato HTTP conserva errores por campo y conflictos de la API",
+        "status": "passed"
+      },
+      {
+        "name": "RF-13/17/21 contrato HTTP una venta usa un solo POST y recibe el entero de orden",
+        "status": "passed"
+      },
+      {
+        "name": "RF-13/17/21 contrato HTTP no reintenta un POST cuya respuesta se perdió; explica el resultado incierto",
+        "status": "passed"
+      },
+      {
+        "name": "RF-13/17/21 contrato HTTP preserva cancelación de lecturas",
+        "status": "passed"
+      },
+      {
+        "name": "RF-13/17/21 contrato HTTP una respuesta de venta ilegible exige revisar Facturas sin repetir el POST",
+        "status": "passed"
+      },
+      {
+        "name": "RF-13/17/21 contrato HTTP entrega PDF binario y rechaza respuestas que no son PDF",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada acepta letras Unicode y rechaza números en nombres, sin alterar el dato",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada rechaza correo inválido: ana!@example.test",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada rechaza correo inválido: ana@@example.test",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada rechaza correo inválido: .ana@example.test",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada rechaza correo inválido: ana..x@example.test",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada rechaza correo inválido: ana@-example.test",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada rechaza correo inválido: ana@localhost",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada rechaza correo inválido: ana x@example.test",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada conserva el límite de correo de 30 caracteres",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada admite contraseñas de 31 caracteres sin truncar",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada admite contraseñas de 64 caracteres sin truncar",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada admite contraseñas de 128 caracteres sin truncar",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada admite contraseñas de 1024 caracteres sin truncar",
+        "status": "passed"
+      },
+      {
+        "name": "RF-18 cuenta y restricciones de entrada exige composición y coincidencia de contraseña",
+        "status": "passed"
+      },
+      {
+        "name": "RF-08/09/11 borrador, inventario y envío acepta ceros iniciales postales y rechaza ciudad corta, signos y dirección vacía",
+        "status": "passed"
+      },
+      {
+        "name": "RF-08/09/11 borrador, inventario y envío requiere cliente, al menos una línea y cliente sin deuda",
+        "status": "passed"
+      },
+      {
+        "name": "RF-08/09/11 borrador, inventario y envío rechaza cantidad inválida ",
+        "status": "passed"
+      },
+      {
+        "name": "RF-08/09/11 borrador, inventario y envío rechaza cantidad inválida 0",
+        "status": "passed"
+      },
+      {
+        "name": "RF-08/09/11 borrador, inventario y envío rechaza cantidad inválida -1",
+        "status": "passed"
+      },
+      {
+        "name": "RF-08/09/11 borrador, inventario y envío rechaza cantidad inválida 1.5",
+        "status": "passed"
+      },
+      {
+        "name": "RF-08/09/11 borrador, inventario y envío rechaza cantidad inválida 21",
+        "status": "passed"
+      },
+      {
+        "name": "RF-08/09/11 borrador, inventario y envío rechaza cantidad inválida 32768",
+        "status": "passed"
+      },
+      {
+        "name": "RF-08/09/11 borrador, inventario y envío rechaza duplicados aunque el payload se prepare fuera de la ventana",
+        "status": "passed"
+      },
+      {
+        "name": "RF-08/09/11 borrador, inventario y envío cambia el producto conservando cantidad y otras líneas; no oculta stock insuficiente",
+        "status": "passed"
+      },
+      {
+        "name": "RF-06/07 filtros y RF-12 redondeo combina filtros por campos, omite vacíos y envía decimales con punto",
+        "status": "passed"
+      },
+      {
+        "name": "RF-06/07 filtros y RF-12 redondeo rechaza rango invertido y existencias no enteras",
+        "status": "passed"
+      },
+      {
+        "name": "RF-06/07 filtros y RF-12 redondeo coincide con el redondeo AwayFromZero positivo del backend",
+        "status": "passed"
+      },
+      {
+        "name": "RF-03/21 sesión local descarta sesiones vencidas o corruptas",
+        "status": "passed"
+      }
+    ]
+  },
+  "serverTests": {
+    "passed": 6,
+    "command": "python3 -m unittest discover -s tools -p test_serve_sdd.py -v"
+  },
+  "build": {
+    "typescript": "passed",
+    "vite": "passed"
+  },
+  "nativeDebian": {
+    "verified": true,
+    "date": "2026-10-26",
+    "os": "Debian GNU/Linux 13 (trixie)",
+    "runtime": ".NET 10.0.13",
+    "frontendRoot": "/home/alex/NorthWind-React-SDD/northwind-sdd",
+    "serverTestsPassed": 6,
+    "frontendHttp": 200,
+    "apiHealthHttp": 200,
+    "anonymousOrdersHttp": 401,
+    "privateConfigurationUnchanged": true,
+    "salesTests": "Kept exclusively in isolated Windows database; no sales written to Debian defense database"
+  },
+  "physicalPrinting": "not verified",
+  "inAppBrowserDownload": "did not complete; binary transport and PDF.js preview verified",
+  "regression": "Malformed successful order response: one new failing RF-13 test before the fix; passed after showing the uncertain-outcome message."
+}

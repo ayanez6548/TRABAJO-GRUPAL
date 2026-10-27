@@ -1,0 +1,13 @@
+@inject JWTAuthenticationStateProvider Authentication
+@inject NavigationManager Navigation
+<AuthorizeView>
+    <Authorized>
+        <span>@(context.User.FindFirst("FullName")?.Value ?? context.User.Identity?.Name)</span>
+        <button class="secondary" @onclick="Logout">Cerrar sesión</button>
+    </Authorized>
+    <NotAuthorized>
+        <NavLink href="user/register">Crear cuenta</NavLink>
+        <NavLink href="user/login">Iniciar sesión</NavLink>
+    </NotAuthorized>
+</AuthorizeView>
+@code { private async Task Logout() { await Authentication.LogoutAsync(); Navigation.NavigateTo("/"); } }

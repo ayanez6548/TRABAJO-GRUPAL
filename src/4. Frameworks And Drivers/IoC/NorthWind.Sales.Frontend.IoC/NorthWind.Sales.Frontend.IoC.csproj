@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>NorthWind.Sales.Frontend.IoC</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\3. Interface Adapters\Views\NorthWind.Membership.Frontend.RazorViews\NorthWind.Membership.Frontend.RazorViews.csproj" />
+    <ProjectReference Include="..\..\..\3. Interface Adapters\Views\NorthWind.Sales.Frontend.Views\NorthWind.Sales.Frontend.Views.csproj" />
+    <ProjectReference Include="..\..\..\1. Enterprise Business Rules\NorthWind.HttpDelegatingHandlers\NorthWind.HttpDelegatingHandlers.csproj" />
+    <ProjectReference Include="..\..\..\1. Enterprise Business Rules\NorthWind.Sales.Validators.Entities\NorthWind.Sales.Validators.Entities.csproj" />
+    <ProjectReference Include="..\..\Libraries\NorthWind.ValidationService.FluentValidation\NorthWind.ValidationService.FluentValidation.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.13" />
+  </ItemGroup>
+</Project>

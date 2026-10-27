@@ -1,0 +1,78 @@
+@implements IAsyncDisposable
+@inject ICreateOrderGateway Gateway
+@inject IJSRuntime Js
+<dialog id="@dialogId" class="invoice-dialog" aria-labelledby="invoice-preview-title">
+    <div class="invoice-preview-heading"><div><p class="eyebrow">COMPROBANTE DE VENTA</p><h2 id="invoice-preview-title">Factura #@OrderId</h2></div><button type="button" class="secondary" @onclick="Close">Cerrar</button></div>
+    <ExceptionDisplay Exception="error" />
+    @if (loading) { <p class="preview-loading" role="status">Preparando la factura…</p> }
+    @if (invoice is not null)
+    {
+        <div class="invoice-preview-meta"><div><span>Cliente</span><strong>@invoice.CustomerName</strong></div><div><span>Fecha de emisión (UTC)</span><strong>@invoice.OrderDate.UtcDateTime.ToString("dd/MM/yyyy HH:mm")</strong></div><div><span>Total de la venta</span><strong>USD @invoice.Total.ToString("F2")</strong></div></div>
+    }
+    @if (pdfUrl is not null)
+    {
+        <div class="invoice-preview-actions"><div class="preview-tabs" aria-label="Vista del comprobante"><button type="button" class="@(showPdf ? "" : "selected")" aria-pressed="@(!showPdf)" @onclick="() => showPdf = false">Factura</button><button type="button" class="@(showPdf ? "selected" : "")" aria-pressed="@showPdf" @onclick="() => showPdf = true">Ver PDF</button></div><div class="action-group"><a class="button" href="@pdfUrl" download="@($"NorthWind-Factura-{OrderId}.pdf")">Descargar PDF</a><button type="button" class="secondary" @onclick="Print">Imprimir PDF</button></div></div>
+        @if (!showPdf && invoice is not null)
+        {
+            <div class="invoice-preview-body"><article class="invoice-paper" aria-label="Detalle de la factura">
+                <div class="invoice-paper-brand"><div><strong>NorthWind</strong><span>COMPROBANTE DE VENTA</span></div><div><h3>FACTURA #@invoice.Id</h3><span>@invoice.OrderDate.UtcDateTime.ToString("dd/MM/yyyy HH:mm") · UTC</span></div></div>
+                <div class="invoice-paper-customer"><div><span>CLIENTE</span><strong>@invoice.CustomerId · @invoice.CustomerName</strong></div><div><span>DIRECCIÓN DE ENVÍO</span><p>@invoice.ShipAddress<br />@invoice.ShipCity, @invoice.ShipCountry @invoice.ShipPostalCode</p></div></div>
+                <div class="table-scroll"><table><thead><tr><th>Código</th><th>Producto</th><th>Cantidad</th><th>Precio unitario</th><th>Importe</th></tr></thead><tbody>@foreach (var line in invoice.Details) { <tr><td>@line.ProductId</td><td>@line.ProductName</td><td>@line.Quantity</td><td>USD @line.UnitPrice.ToString("F2")</td><td>USD @line.Amount.ToString("F2")</td></tr> }</tbody></table></div>
+                <dl class="invoice-totals"><dt>Subtotal</dt><dd>USD @invoice.Subtotal.ToString("F2")</dd><dt>Descuento (@invoice.DiscountPercent%)</dt><dd>USD @invoice.DiscountAmount.ToString("F2")</dd><dt>Base imponible</dt><dd>USD @invoice.TaxableAmount.ToString("F2")</dd><dt>IVA (@((invoice.VatRate * 100).ToString("0.##"))%)</dt><dd>USD @invoice.VatAmount.ToString("F2")</dd><dt class="grand-total">Total</dt><dd class="grand-total">USD @invoice.Total.ToString("F2")</dd></dl>
+                <p class="invoice-paper-note">Comprobante académico de venta. No es una factura electrónica autorizada.</p>
+            </article></div>
+        }
+        <iframe id="@frameId" class="@(showPdf ? "invoice-pdf" : "invoice-print-frame")" aria-hidden="@(!showPdf)" title="Vista previa de la factura en PDF" src="@pdfUrl"></iframe>
+    }
+</dialog>
+@code {
+    [Parameter] public int OrderId { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+    private readonly string dialogId = $"invoice-preview-{Guid.NewGuid():N}";
+    private readonly string frameId = $"invoice-pdf-{Guid.NewGuid():N}";
+    private bool loading = true;
+    private bool showPdf;
+    private InvoiceDto? invoice;
+    private Exception? error;
+    private string? pdfUrl;
+    private bool disposed;
+    private DotNetObjectReference<InvoicePreview>? dialogReference;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            invoice = await Gateway.GetInvoice(OrderId);
+            var bytes = await Gateway.GetInvoicePdf(OrderId);
+            if (disposed) return;
+            pdfUrl = await Js.InvokeAsync<string>("northwindInvoice.createPdfUrl", Convert.ToBase64String(bytes));
+            if (disposed) await Js.InvokeVoidAsync("URL.revokeObjectURL", pdfUrl);
+        }
+        catch (Exception ex) { error = ex; }
+        finally { loading = false; }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dialogReference = DotNetObjectReference.Create(this);
+            await Js.InvokeVoidAsync("northwindInvoice.openDialog", dialogId, dialogReference);
+        }
+    }
+
+    [JSInvokable] public Task ClosePreview() => Close.InvokeAsync();
+    private async Task Print() => await Js.InvokeVoidAsync("northwindInvoice.print", frameId);
+
+    public async ValueTask DisposeAsync()
+    {
+        disposed = true;
+        try
+        {
+            await Js.InvokeVoidAsync("northwindInvoice.closeDialog", dialogId);
+            if (pdfUrl is not null) await Js.InvokeVoidAsync("URL.revokeObjectURL", pdfUrl);
+        }
+        catch (JSDisconnectedException) { }
+        finally { dialogReference?.Dispose(); }
+    }
+}

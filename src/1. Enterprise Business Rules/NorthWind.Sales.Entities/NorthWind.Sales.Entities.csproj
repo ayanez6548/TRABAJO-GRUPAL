@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>NorthWind.Sales.Entities</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup />
+</Project>

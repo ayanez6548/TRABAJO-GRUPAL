@@ -1,0 +1,52 @@
+name: northwind-net10
+services:
+  db:
+    image: postgres:17.11
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: northwind
+      POSTGRES_DB: northwind
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run tools/init-demo-env.sh or tools/Initialize-Demo.ps1 first}
+    ports:
+      - "127.0.0.1:54330:5432"
+    volumes:
+      - northwind-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U northwind -d northwind"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.debian
+      target: backend
+    environment:
+      ConnectionStrings__NorthWind: "Host=db;Database=northwind;Username=northwind;Password=${POSTGRES_PASSWORD}"
+      JwtOptions__SecurityKey: ${JWT_SECURITY_KEY:?Initialize the local .env file first}
+      Database__ApplyMigrations: "true"
+      Database__Provider: PostgreSql
+      SmtpOptions__Mode: ${SMTP_MODE:-PickupDirectory}
+      SmtpOptions__SmtpUserName: ${SMTP_USERNAME:-}
+      SmtpOptions__SmtpPassword: ${SMTP_PASSWORD:-}
+      SmtpOptions__PickupDirectory: /workspace/App_Data/mail
+    ports:
+      - "127.0.0.1:5100:5100"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - northwind-mail:/workspace/App_Data/mail
+  frontend:
+    profiles: ["frontend"]
+    build:
+      context: .
+      dockerfile: Dockerfile.debian
+      target: frontend
+    ports:
+      - "127.0.0.1:5200:5200"
+    depends_on:
+      - api
+volumes:
+  northwind-postgres:
+  northwind-mail:

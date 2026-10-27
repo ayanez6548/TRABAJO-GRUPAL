@@ -1,0 +1,5 @@
+{
+  "profiles": {
+    "NorthWind.Blazor": { "commandName": "Project", "launchBrowser": true, "applicationUrl": "http://localhost:5200", "environmentVariables": { "ASPNETCORE_ENVIRONMENT": "Development" } }
+  }
+}

@@ -1,0 +1,62 @@
+@api = http://localhost:5100
+@email = student@example.test
+@password = Test123!Safe
+@token = PASTE_ACCESS_TOKEN_HERE
+
+### Health
+GET {{api}}/health
+
+### Register (choose a new email if already registered)
+POST {{api}}/user/Register
+Content-Type: application/json
+
+{"email":"{{email}}","password":"{{password}}","firstName":"Student","lastName":"NorthWind"}
+
+### Sign in and copy accessToken into @token
+POST {{api}}/user/Login
+Content-Type: application/json
+
+{"email":"{{email}}","password":"{{password}}"}
+
+### Available products
+GET {{api}}/catalog/products
+Authorization: Bearer {{token}}
+
+### Duplicate product: must return 400
+POST {{api}}/CreateOrder
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{"customerId":"ALFKI","shipAddress":"Main Street 123","shipCity":"Quito","shipCountry":"Ecuador","shipPostalCode":"170101","orderDetails":[{"productId":1,"unitPrice":35,"quantity":1},{"productId":1,"unitPrice":35,"quantity":2}]}
+
+### Special order: configured SMTP or local pickup notification
+POST {{api}}/CreateOrder
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{"customerId":"ALFKI","shipAddress":"Main Street 123","shipCity":"Quito","shipCountry":"Ecuador","shipPostalCode":null,"orderDetails":[{"productId":1,"unitPrice":35,"quantity":1},{"productId":3,"unitPrice":65,"quantity":1},{"productId":4,"unitPrice":75,"quantity":1},{"productId":5,"unitPrice":50,"quantity":1}]}
+
+### Customer with debt: must return 400
+POST {{api}}/CreateOrder
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{"customerId":"ANTON","shipAddress":"Main Street 123","shipCity":"Quito","shipCountry":"Ecuador","shipPostalCode":null,"orderDetails":[{"productId":1,"unitPrice":35,"quantity":1}]}
+
+### Missing token: must return 401
+POST {{api}}/CreateOrder
+Content-Type: application/json
+
+{"customerId":"ALFKI","shipAddress":"Main Street 123","shipCity":"Quito","shipCountry":"Ecuador","shipPostalCode":null,"orderDetails":[{"productId":1,"unitPrice":35,"quantity":1}]}
+
+### Paginated lookup by ID or name
+GET {{api}}/catalog/products/search?query=Chai&page=1&pageSize=5
+Authorization: Bearer {{token}}
+
+### Saved invoice: replace 1 with the created order ID
+GET {{api}}/orders/1
+Authorization: Bearer {{token}}
+
+### Invoice PDF
+GET {{api}}/orders/1/invoice.pdf
+Authorization: Bearer {{token}}

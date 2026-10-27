@@ -1,0 +1,11 @@
+@inherits LayoutComponentBase
+<header>
+    <a class="brand" href="/">NorthWind <small>VENTAS</small></a>
+    <NavMenu />
+    <div class="header-session">
+        <AuthorizeView><Authorized><LiveClock /></Authorized></AuthorizeView>
+        <div class="account"><LoginDisplayComponent /></div>
+    </div>
+</header>
+<main><ErrorBoundary><ChildContent>@Body</ChildContent><ErrorContent><ExceptionDisplay Exception="context" /></ErrorContent></ErrorBoundary></main>
+<footer>NorthWind · Gestión de ventas</footer>

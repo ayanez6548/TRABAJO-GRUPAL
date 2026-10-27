@@ -1,0 +1,59 @@
+@page "/orders/{OrderId:int}"
+@page "/invoices"
+@attribute [Authorize]
+@inject ICreateOrderGateway Gateway
+@inject NavigationManager Navigation
+<PageTitle>Factura de venta | NorthWind</PageTitle>
+<h1>Factura de venta</h1>
+<p class="eyebrow">VENTAS / COMPROBANTES</p><p>Consulta tu historial de ventas o busca una orden guardada para abrir su factura.</p>
+<form class="invoice-search card" @onsubmit="FindInvoice" @onsubmit:preventDefault novalidate><label>Número de orden guardada<input type="text" inputmode="numeric" maxlength="10" pattern="[0-9]*" data-input-rule="digits" data-minimum="1" data-maximum="2147483647" data-input-message="Ingresa un número de orden entre 1 y 2147483647, sin letras ni decimales." @bind="lookupValue" @bind:event="oninput" /><small class="field-hint">Solo números enteros positivos, hasta 10 dígitos.</small></label><button type="submit">Buscar factura</button></form>
+<ExceptionDisplay Exception="error" />
+<InvoiceHistory OpenInvoice="OpenSavedInvoice" />
+@if (loading) { <p role="status">Cargando factura…</p> }
+@if (invoice is not null)
+{
+    <section class="card"><h2>Factura #@invoice.Id</h2><p>Fecha (UTC): @invoice.OrderDate.UtcDateTime.ToString("dd/MM/yyyy HH:mm")</p><p>Cliente: @invoice.CustomerId · @invoice.CustomerName</p><p>Dirección de envío: @invoice.ShipAddress, @invoice.ShipCity, @invoice.ShipCountry @invoice.ShipPostalCode</p><p>Creada por: @invoice.CreatedBy</p>
+    <div class="table-scroll"><table><thead><tr><th>Código</th><th>Producto</th><th>Precio unitario</th><th>Cantidad</th><th>Importe</th></tr></thead><tbody>@foreach (var line in invoice.Details) { <tr><td>@line.ProductId</td><td>@line.ProductName</td><td>USD @line.UnitPrice.ToString("F2")</td><td>@line.Quantity</td><td>USD @line.Amount.ToString("F2")</td></tr> }</tbody></table></div>
+    <dl class="invoice-totals"><dt>Subtotal</dt><dd>USD @invoice.Subtotal.ToString("F2")</dd><dt>Descuento (@invoice.DiscountPercent%)</dt><dd>USD @invoice.DiscountAmount.ToString("F2")</dd><dt>IVA (@((invoice.VatRate * 100).ToString("0.##"))%)</dt><dd>USD @invoice.VatAmount.ToString("F2")</dd><dt><strong>Total</strong></dt><dd><strong>USD @invoice.Total.ToString("F2")</strong></dd></dl>
+    <p>Comprobante académico de venta. No es una factura electrónica autorizada.</p>
+    <button type="button" @onclick="() => previewOpen = true">Ver factura y PDF</button>
+    </section>
+    @if (previewOpen) { <InvoicePreview @key="invoice.Id" OrderId="invoice.Id" Close="() => previewOpen = false" /> }
+}
+@code {
+    [Parameter] public int OrderId { get; set; }
+    private string lookupValue = "";
+    private bool loading;
+    private InvoiceDto? invoice;
+    private Exception? error;
+    private bool previewOpen;
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0].TrimEnd('/') == "invoices")
+        {
+            OrderId = 0; invoice = null; error = null; previewOpen = false;
+            return;
+        }
+        if (OrderId <= 0) return;
+        lookupValue = OrderId.ToString(System.Globalization.CultureInfo.InvariantCulture); loading = true; error = null; invoice = null; previewOpen = false;
+        try { invoice = await Gateway.GetInvoice(OrderId); previewOpen = true; }
+        catch (Exception ex) { error = ex; }
+        finally { loading = false; }
+    }
+    private void FindInvoice()
+    {
+        if (string.IsNullOrEmpty(lookupValue) || !lookupValue.All(char.IsAsciiDigit) || !int.TryParse(lookupValue, out int lookupId) || lookupId <= 0)
+        {
+            error = new NorthWind.Exceptions.Entities.ValidationException([new("OrderId", "Ingresa un número de orden entre 1 y 2147483647, sin letras ni decimales.")]);
+            return;
+        }
+        OpenSavedInvoice(lookupId);
+    }
+    private void OpenSavedInvoice(int id)
+    {
+        error = null;
+        lookupValue = id.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if (id == OrderId && invoice is not null) previewOpen = true;
+        else Navigation.NavigateTo($"orders/{id}");
+    }
+}

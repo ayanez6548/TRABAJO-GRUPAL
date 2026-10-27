@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <RootNamespace>NorthWind.Sales.Frontend.Views</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\2. Application Business Rules\NorthWind.Sales.Frontend.BusinessObjects\NorthWind.Sales.Frontend.BusinessObjects.csproj" />
+    <ProjectReference Include="..\NorthWind.RazorComponents\NorthWind.RazorComponents.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.13" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.13" />
+  </ItemGroup>
+</Project>

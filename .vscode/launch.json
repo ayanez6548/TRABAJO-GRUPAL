@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "NorthWind Backend - Debian / .NET 10",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-backend",
+      "program": "${workspaceFolder}/src/4. Frameworks And Drivers/UI/NorthWind.Sales.WebApi/bin/Debug/net10.0/NorthWind.Sales.WebApi.dll",
+      "cwd": "${workspaceFolder}/src/4. Frameworks And Drivers/UI/NorthWind.Sales.WebApi",
+      "envFile": "${workspaceFolder}/.env.debian",
+      "env": {"ASPNETCORE_ENVIRONMENT": "Development", "ASPNETCORE_URLS": "http://localhost:5100", "DevelopmentTools__MailtrapUrl": ""},
+      "console": "internalConsole",
+      "serverReadyAction": {"action": "openExternally", "pattern": "\\bNow listening on:\\s+(https?://\\S+)", "uriFormat": "%s/swagger"}
+    }
+  ]
+}

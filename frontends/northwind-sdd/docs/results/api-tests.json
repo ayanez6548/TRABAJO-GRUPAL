@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-26T19:36:46.209Z",
+  "base": "http://127.0.0.1:5300/api",
+  "environment": "Windows, .NET 10, isolated LocalDB NorthWindSddReview20261026; PickupDirectory",
+  "results": [
+    {
+      "name": "RF-01/02 registro, duplicado y contraseña mayor a 30",
+      "passed": true
+    },
+    {
+      "name": "RF-17 API protegida exige sesión",
+      "passed": true
+    },
+    {
+      "name": "RF-04/05/06 catálogos, filtros combinados y stock positivo",
+      "passed": true
+    },
+    {
+      "name": "RF-08/14 servidor rechaza cantidad, duplicado, deuda y precio alterado",
+      "passed": true
+    },
+    {
+      "name": "RF-12/13/14 venta real, inventario y totales guardados",
+      "passed": true
+    },
+    {
+      "name": "RF-15 historial paginado de ventas reales",
+      "passed": true
+    },
+    {
+      "name": "RF-16 PDF binario real",
+      "passed": true
+    },
+    {
+      "name": "RF-17 aislamiento de facturas entre cuentas y 404",
+      "passed": true
+    }
+  ],
+  "passed": 8
+}

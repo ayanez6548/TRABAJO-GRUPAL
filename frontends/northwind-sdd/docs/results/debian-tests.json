@@ -1,0 +1,41 @@
+{
+  "serverTests": {
+    "exit": 0,
+    "output": "POST /api/CreateOrder — 200\nGET /api/orders/1/invoice.pdf — 200\nGET /api/orders — 200\nGET /api/orders/9 — 404\nGET /%2e%2e/secret — 404\nGET /.env — 404\nGET /assets/missing.js — 404\nGET /%5csecret — 404\nGET /C:/Windows — 404\nGET /invoices — 200\nGET /worker.mjs — 200\ntest_proxy_post_and_pdf (test_serve_sdd.ServerTests.test_proxy_post_and_pdf) ... ok\ntest_proxy_preserves_bearer_query_and_status (test_serve_sdd.ServerTests.test_proxy_preserves_bearer_query_and_status) ... ok\ntest_rejects_arbitrary_target (test_serve_sdd.ServerTests.test_rejects_arbitrary_target) ... ok\ntest_rejects_traversal_missing_assets_and_secrets (test_serve_sdd.ServerTests.test_rejects_traversal_missing_assets_and_secrets) ... ok\ntest_spa_direct_route (test_serve_sdd.ServerTests.test_spa_direct_route) ... ok\ntest_worker_module_mime_type (test_serve_sdd.ServerTests.test_worker_module_mime_type) ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 1.054s\n\nOK\n"
+  },
+  "--start": {
+    "exit": 0,
+    "output": "React SDD activo (PID 10265). URL: http://127.0.0.1:5300\nAPI: {\"status\":\"ok\",\"framework\":\"net10.0\",\"runtime\":\".NET 10.0.13\",\"os\":\"Debian GNU/Linux 13 (trixie)\"}\n"
+  },
+  "--status": {
+    "exit": 0,
+    "output": "React SDD activo (PID 10265). URL: http://127.0.0.1:5300\nAPI: {\"status\":\"ok\",\"framework\":\"net10.0\",\"runtime\":\".NET 10.0.13\",\"os\":\"Debian GNU/Linux 13 (trixie)\"}\n"
+  },
+  "/": {
+    "status": 200,
+    "type": "text/html",
+    "bytes": 454
+  },
+  "/invoices": {
+    "status": 200,
+    "type": "text/html",
+    "bytes": 454
+  },
+  "/api/health": {
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "bytes": 98,
+    "health": {
+      "status": "ok",
+      "framework": "net10.0",
+      "runtime": ".NET 10.0.13",
+      "os": "Debian GNU/Linux 13 (trixie)"
+    }
+  },
+  "/api/orders?page=1&pageSize=5": {
+    "status": 401
+  },
+  "privateConfigUnchanged": true,
+  "apiService": "active",
+  "root": "/home/alex/NorthWind-React-SDD/northwind-sdd"
+}

@@ -1,0 +1,36 @@
+{
+  "name": "northwind-sdd-react",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "npm run check && vite build",
+    "format": "prettier --write src index.html vite.config.ts tsconfig.json package.json",
+    "format:check": "prettier --check src index.html vite.config.ts tsconfig.json package.json",
+    "preview": "vite preview --host 127.0.0.1 --port 5300 --strictPort"
+  },
+  "dependencies": {
+    "decimal.js": "10.6.0",
+    "pdfjs-dist": "6.4.299",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router-dom": "7.18.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "prettier": "3.6.2",
+    "typescript": "7.0.2",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}

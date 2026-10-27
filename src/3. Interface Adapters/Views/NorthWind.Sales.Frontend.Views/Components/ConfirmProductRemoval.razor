@@ -1,0 +1,29 @@
+@implements IAsyncDisposable
+@inject IJSRuntime Js
+<dialog id="@dialogId" class="confirmation-dialog" aria-labelledby="@titleId" aria-describedby="@descriptionId">
+    <h2 id="@titleId">¿Quitar producto de la orden?</h2>
+    <p id="@descriptionId">Vas a quitar <strong>@ProductName</strong> del detalle de esta orden.</p>
+    <p>Puedes cancelar para conservar el producto y su cantidad.</p>
+    <div class="action-group"><button type="button" class="secondary" autofocus @onclick="Cancel">Cancelar</button><button type="button" class="danger" @onclick="Confirm">Sí, quitar</button></div>
+</dialog>
+@code {
+    [Parameter] public string ProductName { get; set; } = "Línea sin producto";
+    [Parameter] public EventCallback Cancelled { get; set; }
+    [Parameter] public EventCallback Confirmed { get; set; }
+    private readonly string dialogId = $"remove-product-{Guid.NewGuid():N}";
+    private string titleId => dialogId + "-title";
+    private string descriptionId => dialogId + "-description";
+    private DotNetObjectReference<ConfirmProductRemoval>? reference;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) { reference = DotNetObjectReference.Create(this); await Js.InvokeVoidAsync("northwindConfirmation.open", dialogId, reference); }
+    }
+    [JSInvokable] public Task Cancel() => Cancelled.InvokeAsync();
+    private Task Confirm() => Confirmed.InvokeAsync();
+    public async ValueTask DisposeAsync()
+    {
+        try { await Js.InvokeVoidAsync("northwindConfirmation.close", dialogId); }
+        catch (JSDisconnectedException) { }
+        finally { reference?.Dispose(); }
+    }
+}

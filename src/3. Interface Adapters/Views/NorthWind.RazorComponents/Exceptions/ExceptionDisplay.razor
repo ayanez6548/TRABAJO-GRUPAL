@@ -1,0 +1,46 @@
+@using NorthWind.Exceptions.Entities
+@using Microsoft.JSInterop
+@inject IJSRuntime Js
+@code {
+    [Parameter] public Exception? Exception { get; set; }
+    private Exception? previousException;
+    private bool showWarning;
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(previousException, Exception))
+        {
+            previousException = Exception;
+            showWarning = Exception is not null;
+        }
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!showWarning || Exception is null) return;
+        showWarning = false;
+        var messages = Exception is ValidationException validation
+            ? validation.Errors.Select(error => $"{GetFieldLabel(error.PropertyName)}: {error.Message}").ToArray()
+            : new[] { GetMessage(Exception) };
+        await Js.InvokeVoidAsync("northwindWarnings.show", Exception is ValidationException ? "Revisa los datos ingresados" : "No se pudo completar la operación", messages);
+    }
+    private static string GetMessage(Exception exception) => exception is HttpRequestException or UnauthorizedAccessException
+        or NotificationException or StockConflictException ? exception.Message : "No se pudo completar la operación. Inténtalo nuevamente.";
+    private static string GetFieldLabel(string property)
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(property, @"^OrderDetails\[(\d+)\](?:\.(\w+))?$");
+        if (match.Success)
+        {
+            var line = int.Parse(match.Groups[1].Value) + 1;
+            return match.Groups[2].Success ? $"Producto {line}, {GetFieldLabel(match.Groups[2].Value).ToLowerInvariant()}" : $"Producto {line}";
+        }
+        return property switch
+        {
+            "CustomerId" => "Cliente", "OrderDetails" => "Detalle de la orden", "ProductId" => "Producto",
+            "UnitPrice" => "Precio unitario", "Quantity" => "Cantidad", "ShipAddress" => "Dirección de envío",
+            "ShipCity" => "Ciudad", "ShipCountry" => "País", "ShipPostalCode" => "Código postal",
+            "FirstName" => "Nombres", "LastName" => "Apellidos", "Email" => "Correo electrónico",
+            "Password" => "Contraseña", "ConfirmPassword" => "Confirmar contraseña", "Credentials" => "Datos de acceso",
+            "Search" => "Búsqueda", "Code" => "Código", "Name" => "Nombre", "Balance" => "Saldo",
+            "Price" => "Precio", "Stock" => "Existencias", "History" => "Historial de facturas", "OrderId" => "Número de orden", _ => "Datos ingresados"
+        };
+    }
+}
