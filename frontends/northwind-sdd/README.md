@@ -2,6 +2,8 @@
 
 Esta entrega implementa únicamente el tercer frontend grupal. Consume la API .NET 10 existente y conserva Blazor como frontend individual. La interfaz es española; identificadores, rutas y payloads son ingleses.
 
+Para reconstruir **toda** la aplicación, usa el [SPEC maestro](../../SPEC.md) y su [prompt](../../specs/000-northwind-system/PROMPT.md). Ese paquete consolida backend, datos, Blazor y React; esta carpeta conserva el proceso SDD y los resultados históricos del tercer frontend.
+
 ## Arranque desde PowerShell
 
 Primero mantén el backend accesible en `http://127.0.0.1:5100`. Si está en Debian, en otra consola abre el túnel SSH que ya utilizas. No inicies una segunda API en el mismo puerto.

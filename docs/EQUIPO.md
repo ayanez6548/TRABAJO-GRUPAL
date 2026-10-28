@@ -123,6 +123,9 @@ Si deseas usar tu propio sandbox Mailtrap, configura privadamente `SMTP_MODE=Smt
 
 ## Documentación que debe conocer quien exponga
 
+- [SPEC maestro: toda la aplicación desde cero](../SPEC.md)
+- [Prompt para reconstruir con todas las especificaciones](../specs/000-northwind-system/PROMPT.md)
+- [Casos de aceptación y trazabilidad de las 16 prácticas y 19 requisitos](../specs/000-northwind-system/acceptance.md)
 - [Requisitos del semestre y su implementación](SEMESTER-REQUIREMENTS.md)
 - [Modelo entidad-relación](DATA-MODEL.md)
 - [Estructura por capas](../ESTRUCTURA.md)

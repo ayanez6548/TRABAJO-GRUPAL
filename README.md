@@ -2,6 +2,8 @@
 
 **Para los compañeros:** sigue [la guía de entrega completa](docs/EQUIPO.md) para preparar una copia independiente con API, PostgreSQL, Blazor y React SDD, sin depender de la máquina ni las contraseñas de Alexander. Arranque en Windows o Debian: `node tools/start-team-demo.mjs`.
 
+**Para reconstruir desde cero:** [SPEC maestro](SPEC.md) reúne reglas, validaciones, pantallas, arquitectura, contratos y aceptación de toda la aplicación. Incluye un [prompt de reconstrucción](specs/000-northwind-system/PROMPT.md), plan y tareas nuevas. Es una consolidación del producto existente; conserva la evidencia histórica del proceso SDD de React.
+
 The third group frontend now lives in [frontends/northwind-sdd](frontends/northwind-sdd/README.md): React + TypeScript with specifications, plan, tasks and verification evidence. It uses port 5300 and the existing API; the individual Blazor frontend remains on 5200. Start it with `npm run dev` in that directory, or serve its compiled files on Debian as documented there.
 
 The 31-project solution implements practices 01–16 and the previous-semester sales requirements in four Clean Architecture layers. All projects target .NET 10 / C# 14. Blazor WebAssembly uses stable 10.0.13. The backend presentation uses Debian 13 and PostgreSQL. Windows retains SQL Server LocalDB and its existing data.
